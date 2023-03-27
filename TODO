@@ -1,0 +1,18 @@
+
+Todo:
+
+  Core:
+    ☐ Write unit tests for chatclient and command and get tests running in vscode
+    ☐ Gather a list of template tags and commands needed to support old functionality
+    ☐ Get a database image built
+    ☐ Write scripts to insert metadata and test data into db
+    ☐ Implement Gorm
+    ☐ Implement logic to determine if an incoming private message is from a moderator/host in chatclient
+
+  Improvements:
+    ☐ Check if string passed into parse command func needs at least length of two?
+    ☐ Might need to either set up a lock on chatClient.sayIncomingMessages or only allow one output channel
+    ☐ Implement signal channels created in/from StartListening and StartChatting to stop the bot
+
+  
+  
