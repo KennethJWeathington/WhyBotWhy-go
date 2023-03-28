@@ -20,21 +20,21 @@ func (client *ChatClient) StartListening(inputChannel chan<- struct {
 	Message     string
 	IsModerator bool
 }) {
-	parseIncomingMessage := client.parseIncomingMessageCallback(inputChannel)
-	client.twitchClient.OnPrivateMessage(parseIncomingMessage)
+	parseIncomingMessageCallback := client.parseIncomingMessage(inputChannel)
+	client.twitchClient.OnPrivateMessage(parseIncomingMessageCallback)
 }
 
 func (client *ChatClient) StartChatting(outputChannel <-chan string) {
 	go client.sayIncomingMessages(outputChannel)
 }
 
-func (client *ChatClient) parseIncomingMessageCallback(inputChannel chan<- struct {
+func (client *ChatClient) parseIncomingMessage(inputChannel chan<- struct {
 	Message     string
 	IsModerator bool
 }) func(message twitch.PrivateMessage) {
 	return func(message twitch.PrivateMessage) {
 		messageText := message.Message
-		isAdmin := false
+		isAdmin := isModerator(message.User.Badges)
 
 		inputChannel <- struct {
 			Message     string
@@ -54,4 +54,8 @@ func NewChatClient(channel string, username string, oauth string) *ChatClient {
 		twitchClient: twitch.NewClient(username, oauth),
 		channelName:  channel,
 	}
+}
+
+func isModerator(badges map[string]int) bool {
+	return badges["broadcaster"] > 0 || badges["moderator"] > 0
 }
