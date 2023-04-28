@@ -114,6 +114,7 @@ VALUES(1, 1),
 (8, 11),
 (9, 12);
 
+
 /*
 SELECT c.name, c.is_moderator_only, cty.name, ct.text, ct.custom_text_query, ctt.name, co.name
 FROM command c
