@@ -16,16 +16,16 @@ func (client *ChatClient) JoinChannel() {
 	}
 }
 
-func (client *ChatClient) StartListening(inputChannel chan<- struct {
+func (client *ChatClient) StartListening(incomingMessagesChannel chan<- struct {
 	Message     string
 	IsModerator bool
 }) {
-	parseIncomingMessageCallback := client.parseIncomingMessage(inputChannel)
+	parseIncomingMessageCallback := client.parseIncomingMessage(incomingMessagesChannel)
 	client.twitchClient.OnPrivateMessage(parseIncomingMessageCallback)
 }
 
-func (client *ChatClient) StartChatting(outputChannel <-chan string) {
-	go client.sayIncomingMessages(outputChannel)
+func (client *ChatClient) StartChatting(outgoingMessagesChannel <-chan string) {
+	go client.sayIncomingMessages(outgoingMessagesChannel)
 }
 
 func (client *ChatClient) parseIncomingMessage(inputChannel chan<- struct {

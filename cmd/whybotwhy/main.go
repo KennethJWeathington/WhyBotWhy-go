@@ -1,14 +1,21 @@
 package main
 
 import (
+	"fmt"
 	"html/template"
 	"strings"
 
 	"github.com/kennethjweathington/whybotwhy_go/pkg/chat_client"
 	"github.com/kennethjweathington/whybotwhy_go/pkg/command"
+	"github.com/kennethjweathington/whybotwhy_go/pkg/database_client"
 
 	"github.com/joho/godotenv"
 )
+
+type TestStruct struct {
+	Name string
+	Yeet int
+}
 
 func main() {
 	env, err := godotenv.Read()
@@ -16,20 +23,29 @@ func main() {
 		panic(err)
 	}
 
-	channelName, userName, oauthToken := env["CHANNEL_NAME"], env["BOT_USERNAME"], env["OAUTH_TOKEN"]
+	channelName, userName, oauthToken, databaseName := env["CHANNEL_NAME"], env["BOT_USERNAME"], env["OAUTH_TOKEN"], env["DATABASE_NAME"]
+
+	db := database_client.SetUpDatabase(databaseName)
+
+	db.AutoMigrate(&TestStruct{})
+	db.Create(&TestStruct{Name: "Test", Yeet: 3})
+	var tes TestStruct
+	db.First(&tes)
+	fmt.Println(tes.Name)
+	fmt.Println(tes.Yeet)
 
 	client := chat_client.NewChatClient(channelName, userName, oauthToken)
 
-	inputChannel := make(chan struct {
+	incomingMessagesChannel := make(chan struct {
 		Message     string
 		IsModerator bool
 	})
-	client.StartListening(inputChannel)
+	client.StartListening(incomingMessagesChannel)
 
-	outputChannel := make(chan string)
-	client.StartChatting(outputChannel)
+	outgoingMessagesChannel := make(chan string)
+	client.StartChatting(outgoingMessagesChannel)
 
-	go testChatHandler(inputChannel, outputChannel)
+	go testChatHandler(incomingMessagesChannel, outgoingMessagesChannel)
 
 	client.JoinChannel()
 }
