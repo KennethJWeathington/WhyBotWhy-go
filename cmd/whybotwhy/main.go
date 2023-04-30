@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"html/template"
 	"strings"
 
@@ -27,12 +26,7 @@ func main() {
 
 	db := database_client.SetUpDatabase(databaseName)
 
-	db.AutoMigrate(&TestStruct{})
-	db.Create(&TestStruct{Name: "Test", Yeet: 3})
-	var tes TestStruct
-	db.First(&tes)
-	fmt.Println(tes.Name)
-	fmt.Println(tes.Yeet)
+	database_client.CreateInitialDatabaseData(db)
 
 	client := chat_client.NewChatClient(channelName, userName, oauthToken)
 
