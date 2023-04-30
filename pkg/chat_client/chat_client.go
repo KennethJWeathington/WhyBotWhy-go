@@ -17,6 +17,7 @@ func (client *ChatClient) JoinChannel() {
 }
 
 func (client *ChatClient) StartListening(incomingMessagesChannel chan<- struct {
+	UserName    string
 	Message     string
 	IsModerator bool
 }) {
@@ -25,25 +26,28 @@ func (client *ChatClient) StartListening(incomingMessagesChannel chan<- struct {
 }
 
 func (client *ChatClient) StartChatting(outgoingMessagesChannel <-chan string) {
-	go client.sayIncomingMessages(outgoingMessagesChannel)
+	go client.sayOutgoingMessages(outgoingMessagesChannel)
 }
 
-func (client *ChatClient) parseIncomingMessage(inputChannel chan<- struct {
+func (client *ChatClient) parseIncomingMessage(incomingMessagesChannel chan<- struct {
+	UserName    string
 	Message     string
 	IsModerator bool
 }) func(message twitch.PrivateMessage) {
 	return func(message twitch.PrivateMessage) {
+		userName := message.User.DisplayName
 		messageText := message.Message
 		isAdmin := isModerator(message.User.Badges)
 
-		inputChannel <- struct {
+		incomingMessagesChannel <- struct {
+			UserName    string
 			Message     string
 			IsModerator bool
-		}{messageText, isAdmin}
+		}{userName, messageText, isAdmin}
 	}
 }
 
-func (client *ChatClient) sayIncomingMessages(channel <-chan string) {
+func (client *ChatClient) sayOutgoingMessages(channel <-chan string) {
 	for message := range channel {
 		client.twitchClient.Say(client.channelName, message)
 	}
