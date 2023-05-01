@@ -25,10 +25,6 @@ func (client *ChatClient) StartListening(incomingMessagesChannel chan<- struct {
 	client.twitchClient.OnPrivateMessage(parseIncomingMessageCallback)
 }
 
-func (client *ChatClient) StartChatting(outgoingMessagesChannel <-chan string) {
-	go client.sayOutgoingMessages(outgoingMessagesChannel)
-}
-
 func (client *ChatClient) parseIncomingMessage(incomingMessagesChannel chan<- struct {
 	UserName    string
 	Message     string
@@ -47,8 +43,8 @@ func (client *ChatClient) parseIncomingMessage(incomingMessagesChannel chan<- st
 	}
 }
 
-func (client *ChatClient) sayOutgoingMessages(channel <-chan string) {
-	for message := range channel {
+func (client *ChatClient) StartSaying(outgoingMessagesChannel <-chan string) {
+	for message := range outgoingMessagesChannel {
 		client.twitchClient.Say(client.channelName, message)
 	}
 }

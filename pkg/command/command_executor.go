@@ -1,7 +1,7 @@
 package command
 
 import (
-	"github.com/kennethjweathington/whybotwhy_go/pkg/database_client"
+	"github.com/jake-weath/whybotwhy_go/pkg/database_client"
 )
 
 func ExecuteCommands(commands []database_client.Command, commandExecutionChannel <-chan CommandExecutionDetails, outgoingMessageChannel chan<- string) {

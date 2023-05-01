@@ -1,4 +1,4 @@
-module github.com/kennethjweathington/whybotwhy_go
+module github.com/jake-weath/whybotwhy_go
 
 go 1.20
 

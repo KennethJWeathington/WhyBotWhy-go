@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/kennethjweathington/whybotwhy_go/pkg/chat_client"
-	"github.com/kennethjweathington/whybotwhy_go/pkg/command"
-	"github.com/kennethjweathington/whybotwhy_go/pkg/database_client"
+	"github.com/jake-weath/whybotwhy_go/pkg/chat_client"
+	"github.com/jake-weath/whybotwhy_go/pkg/command"
+	"github.com/jake-weath/whybotwhy_go/pkg/database_client"
 
 	"github.com/joho/godotenv"
 )
@@ -30,8 +30,8 @@ func main() {
 	commandsChannel := make(chan command.CommandExecutionDetails, 100)
 	outgoingMessagesChannel := make(chan string, 100)
 
-	client.StartListening(incomingMessagesChannel)
-	client.StartChatting(outgoingMessagesChannel)
+	go client.StartListening(incomingMessagesChannel)
+	go client.StartSaying(outgoingMessagesChannel)
 	go command.ParseIncomingMessagesToCommands(incomingMessagesChannel, commandsChannel)
 	go command.ExecuteCommands(commands, commandsChannel, outgoingMessagesChannel)
 
