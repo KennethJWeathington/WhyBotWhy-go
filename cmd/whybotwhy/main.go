@@ -5,6 +5,7 @@ import (
 	"github.com/jake-weath/whybotwhy_go/pkg/command"
 	"github.com/jake-weath/whybotwhy_go/pkg/database_client"
 
+	"github.com/gempir/go-twitch-irc/v4"
 	"github.com/joho/godotenv"
 )
 
@@ -18,9 +19,10 @@ func main() {
 
 	db := database_client.SetUpDatabase(databaseName)
 	database_client.CreateInitialDatabaseData(db)
-	commands := database_client.GetAllCommands(db)
 
-	client := chat_client.NewChatClient(channelName, userName, oauthToken)
+	twitchClient := twitch.NewClient(userName, oauthToken)
+
+	client := chat_client.NewChatClient(channelName, twitchClient)
 
 	incomingMessagesChannel := make(chan struct {
 		UserName    string
@@ -33,7 +35,7 @@ func main() {
 	go client.StartListening(incomingMessagesChannel)
 	go client.StartSaying(outgoingMessagesChannel)
 	go command.ParseIncomingMessagesToCommands(incomingMessagesChannel, commandsChannel)
-	go command.ExecuteCommands(commands, commandsChannel, outgoingMessagesChannel)
+	go command.ExecuteCommands(db, commandsChannel, outgoingMessagesChannel)
 
 	//go testChatHandler(incomingMessagesChannel, outgoingMessagesChannel)
 

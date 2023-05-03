@@ -5,13 +5,20 @@ import (
 )
 
 type ChatClient struct {
-	twitchClient *twitch.Client
-	channelName  string
+	chatConnection ChatConnection
+	channelName    string
+}
+
+type ChatConnection interface {
+	Join(channels ...string)
+	Connect() error
+	Say(channel, message string)
+	OnPrivateMessage(handler func(message twitch.PrivateMessage))
 }
 
 func (client *ChatClient) JoinChannel() {
-	client.twitchClient.Join(client.channelName)
-	if err := client.twitchClient.Connect(); err != nil {
+	client.chatConnection.Join(client.channelName)
+	if err := client.chatConnection.Connect(); err != nil {
 		panic(err)
 	}
 }
@@ -22,7 +29,7 @@ func (client *ChatClient) StartListening(incomingMessagesChannel chan<- struct {
 	IsModerator bool
 }) {
 	parseIncomingMessageCallback := client.parseIncomingMessage(incomingMessagesChannel)
-	client.twitchClient.OnPrivateMessage(parseIncomingMessageCallback)
+	client.chatConnection.OnPrivateMessage(parseIncomingMessageCallback)
 }
 
 func (client *ChatClient) parseIncomingMessage(incomingMessagesChannel chan<- struct {
@@ -45,14 +52,14 @@ func (client *ChatClient) parseIncomingMessage(incomingMessagesChannel chan<- st
 
 func (client *ChatClient) StartSaying(outgoingMessagesChannel <-chan string) {
 	for message := range outgoingMessagesChannel {
-		client.twitchClient.Say(client.channelName, message)
+		client.chatConnection.Say(client.channelName, message)
 	}
 }
 
-func NewChatClient(channel string, username string, oauth string) *ChatClient {
+func NewChatClient(channel string, chatConnection ChatConnection) *ChatClient {
 	return &ChatClient{
-		twitchClient: twitch.NewClient(username, oauth),
-		channelName:  channel,
+		chatConnection: chatConnection,
+		channelName:    channel,
 	}
 }
 

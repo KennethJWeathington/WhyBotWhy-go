@@ -1,6 +1,8 @@
 package command
 
 type CommandExecutionDetails struct {
-	Name      string
-	Arguments []string
+	UserName    string
+	IsModerator bool
+	CommandName string
+	Arguments   []string
 }
