@@ -28,7 +28,7 @@ func ParseCommand(messageDetails struct {
 }) (CommandExecutionDetails, error) {
 	userName, message, isModerator := messageDetails.UserName, messageDetails.Message, messageDetails.IsModerator
 	if len(message) == 0 || message[0:1] != commandSignifier {
-		return CommandExecutionDetails{}, errors.New("Not a command")
+		return CommandExecutionDetails{}, errors.New("not a command")
 	}
 
 	words := strings.Fields(message)
