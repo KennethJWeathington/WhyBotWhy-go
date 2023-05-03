@@ -1,4 +1,4 @@
-package database_client
+package model
 
 import (
 	"gorm.io/gorm"
@@ -48,10 +48,4 @@ type Command struct {
 	CounterID       uint
 	Counter         Counter
 	IsModeratorOnly bool `gorm:"default false"`
-}
-
-func GetAllCommands(db *gorm.DB) []Command {
-	var commands []Command
-	db.Preload("CommandType").Preload("CommandTexts").Preload("CommandTexts.CommandTextType").Preload("Counter").Find(&commands)
-	return commands
 }

@@ -3,120 +3,122 @@ package database_client
 import (
 	"reflect"
 
+	"github.com/jake-weath/whybotwhy_go/pkg/command/command_type"
+	"github.com/jake-weath/whybotwhy_go/pkg/database_client/model"
 	"gorm.io/gorm"
 )
 
-var baseCounters = []Counter{
+var baseCounters = []model.Counter{
 	{Name: "deaths", Count: 0},
 	{Name: "boops", Count: 0},
 }
 
-var baseCommandTypes = []CommandType{
-	{Name: "text"},
-	{Name: "increment_count"},
-	{Name: "increment_count_by_user"},
-	{Name: "set_count"},
-	{Name: "add_text_command"},
-	{Name: "remove_text_command"},
+var baseCommandTypes = []model.CommandType{
+	{Name: command_type.TextCommandType},
+	{Name: command_type.IncrementCountCommandType},
+	{Name: command_type.IncrementCountByUserCommandType},
+	{Name: command_type.SetCountCommandType},
+	{Name: command_type.AddTextCommandType},
+	{Name: command_type.RemoveTextCommandType},
 }
 
-var baseCommandTextTypes = []CommandTextType{
+var baseCommandTextTypes = []model.CommandTextType{
 	{Name: "success"},
 	{Name: "failure"},
 	{Name: "header"},
 	{Name: "body"},
 }
 
-var baseCommands = []Command{
+var baseCommands = []model.Command{
 	{Name: "whyme",
-		CommandType: CommandType{Name: "text"},
-		CommandTexts: []CommandText{
+		CommandType: model.CommandType{Name: "text"},
+		CommandTexts: []model.CommandText{
 			{Text: "WHY {{.chatUserName}} WHY!?",
 				NeedsUserInfo: true,
 			},
 		},
 	},
 	{Name: "death",
-		CommandType: CommandType{Name: "increment_count"},
-		CommandTexts: []CommandText{
+		CommandType: model.CommandType{Name: "increment_count"},
+		CommandTexts: []model.CommandText{
 			{Text: "{{.streamName}} has died embarrassingly {{.deaths}} times on stream!",
 				NeedsStreamInfo:  true,
 				NeedsCounterInfo: true,
 			},
 		},
-		Counter: Counter{Name: "deaths"},
+		Counter: model.Counter{Name: "deaths"},
 	},
 	{Name: "setdeaths",
-		CommandType: CommandType{Name: "set_count"},
-		CommandTexts: []CommandText{
+		CommandType: model.CommandType{Name: "set_count"},
+		CommandTexts: []model.CommandText{
 			{Text: "Deaths set to {{.deaths}}.",
 				NeedsCounterInfo: true,
 			},
 		},
-		Counter:         Counter{Name: "deaths"},
+		Counter:         model.Counter{Name: "deaths"},
 		IsModeratorOnly: true,
 	},
 	{Name: "boop",
-		CommandType: CommandType{Name: "increment_count"},
-		CommandTexts: []CommandText{
+		CommandType: model.CommandType{Name: "increment_count"},
+		CommandTexts: []model.CommandText{
 			{Text: "{{.chatUserName}} booped the snoot! The snoot has been booped {{.boops}} times.",
 				NeedsUserInfo:    true,
 				NeedsCounterInfo: true,
 			},
 		},
-		Counter: Counter{Name: "boops"},
+		Counter: model.Counter{Name: "boops"},
 	},
 	{Name: "boopboard",
-		CommandType: CommandType{Name: "text"},
-		CommandTexts: []CommandText{
+		CommandType: model.CommandType{Name: "text"},
+		CommandTexts: []model.CommandText{
 			{Text: "Top Boopers",
-				CommandTextType: CommandTextType{Name: "header"},
+				CommandTextType: model.CommandTextType{Name: "header"},
 			},
 			{Text: "{{.row}}. @{{.chatUserName}}: ${{countByUser}} boops",
-				CommandTextType:  CommandTextType{Name: "body"},
+				CommandTextType:  model.CommandTextType{Name: "body"},
 				NeedsUserInfo:    true,
 				NeedsCounterInfo: true,
 			},
 			{Text: "{{.row}}. @{{.chatUserName}}: ${{countByUser}} boops",
-				CommandTextType:  CommandTextType{Name: "body"},
+				CommandTextType:  model.CommandTextType{Name: "body"},
 				NeedsUserInfo:    true,
 				NeedsCounterInfo: true,
 			},
 			{Text: "{{.row}}. @{{.chatUserName}}: ${{countByUser}} boops",
-				CommandTextType:  CommandTextType{Name: "body"},
+				CommandTextType:  model.CommandTextType{Name: "body"},
 				NeedsUserInfo:    true,
 				NeedsCounterInfo: true,
 			},
 		},
-		Counter: Counter{Name: "boops"},
+		Counter: model.Counter{Name: "boops"},
 	},
 	{Name: "addcommand",
-		CommandType: CommandType{Name: "add_text_command"},
-		CommandTexts: []CommandText{
+		CommandType: model.CommandType{Name: "add_text_command"},
+		CommandTexts: []model.CommandText{
 			{Text: "Command added.",
-				CommandTextType: CommandTextType{Name: "success"},
+				CommandTextType: model.CommandTextType{Name: "success"},
 			},
 			{Text: "Command already exists.",
-				CommandTextType: CommandTextType{Name: "failure"},
+				CommandTextType: model.CommandTextType{Name: "failure"},
 			},
 		},
 		IsModeratorOnly: true,
 	},
 	{Name: "removecommand",
-		CommandType: CommandType{Name: "remove_text_command"},
-		CommandTexts: []CommandText{
+		CommandType: model.CommandType{Name: "remove_text_command"},
+		CommandTexts: []model.CommandText{
 			{Text: "Command removed.",
-				CommandTextType: CommandTextType{Name: "success"},
+				CommandTextType: model.CommandTextType{Name: "success"},
 			},
 			{Text: "Command not found.",
-				CommandTextType: CommandTextType{Name: "failure"},
+				CommandTextType: model.CommandTextType{Name: "failure"},
 			},
 		},
 		IsModeratorOnly: true,
 	},
 	{Name: "rules",
-		CommandType: CommandType{Name: "text"},
-		CommandTexts: []CommandText{
+		CommandType: model.CommandType{Name: "text"},
+		CommandTexts: []model.CommandText{
 			{Text: "Please remember the channel rules:"},
 			{Text: "1. Be kind"},
 			{Text: "2. No politics or religion"},
@@ -125,32 +127,32 @@ var baseCommands = []Command{
 		},
 	},
 	{Name: "commands",
-		CommandType: CommandType{Name: "text"},
-		CommandTexts: []CommandText{
+		CommandType: model.CommandType{Name: "text"},
+		CommandTexts: []model.CommandText{
 			{Text: `The current commands are: {{.commands}}`},
 		},
 	},
 }
 
 func CreateInitialDatabaseData(db *gorm.DB) error {
-	db.AutoMigrate(&CounterByUser{})
-	db.AutoMigrate(&Counter{})
+	db.AutoMigrate(&model.CounterByUser{})
+	db.AutoMigrate(&model.Counter{})
 	if err := createInitialDatabaseCountersIfNotExists(db, baseCounters); err != nil {
 		return err
 	}
 
-	db.AutoMigrate(&CommandTextType{})
+	db.AutoMigrate(&model.CommandTextType{})
 	if err := createInitialDatabaseCommandTextTypesIfNotExists(db, baseCommandTextTypes); err != nil {
 		return err
 	}
 
-	db.AutoMigrate(&CommandType{})
+	db.AutoMigrate(&model.CommandType{})
 	if err := createInitialDatabaseCommandTypesIfNotExists(db, baseCommandTypes); err != nil {
 		return err
 	}
 
-	db.AutoMigrate(&Command{})
-	db.AutoMigrate(&CommandText{})
+	db.AutoMigrate(&model.Command{})
+	db.AutoMigrate(&model.CommandText{})
 	if err := createInitialDatabaseCommandsIfNotExists(db, baseCommands); err != nil {
 		return err
 	}
@@ -158,7 +160,7 @@ func CreateInitialDatabaseData(db *gorm.DB) error {
 	return nil
 }
 
-func createInitialDatabaseCountersIfNotExists(db *gorm.DB, baseCounters []Counter) error {
+func createInitialDatabaseCountersIfNotExists(db *gorm.DB, baseCounters []model.Counter) error {
 	for _, counter := range baseCounters {
 		if err := db.FirstOrCreate(&counter, counter).Error; err != nil {
 			return err
@@ -167,7 +169,7 @@ func createInitialDatabaseCountersIfNotExists(db *gorm.DB, baseCounters []Counte
 	return nil
 }
 
-func createInitialDatabaseCommandTextTypesIfNotExists(db *gorm.DB, baseCommandTextTypes []CommandTextType) error {
+func createInitialDatabaseCommandTextTypesIfNotExists(db *gorm.DB, baseCommandTextTypes []model.CommandTextType) error {
 	for _, commandTextType := range baseCommandTextTypes {
 		if err := db.FirstOrCreate(&commandTextType, commandTextType).Error; err != nil {
 			return err
@@ -176,7 +178,7 @@ func createInitialDatabaseCommandTextTypesIfNotExists(db *gorm.DB, baseCommandTe
 	return nil
 }
 
-func createInitialDatabaseCommandTypesIfNotExists(db *gorm.DB, baseCommandTypes []CommandType) error {
+func createInitialDatabaseCommandTypesIfNotExists(db *gorm.DB, baseCommandTypes []model.CommandType) error {
 	for _, commandType := range baseCommandTypes {
 		if err := db.FirstOrCreate(&commandType, commandType).Error; err != nil {
 			return err
@@ -185,7 +187,7 @@ func createInitialDatabaseCommandTypesIfNotExists(db *gorm.DB, baseCommandTypes 
 	return nil
 }
 
-func createInitialDatabaseCommandsIfNotExists(db *gorm.DB, baseCommands []Command) error {
+func createInitialDatabaseCommandsIfNotExists(db *gorm.DB, baseCommands []model.Command) error {
 	for _, command := range baseCommands {
 		if err := db.First(&command.CommandType, command.CommandType).Error; err != nil {
 			return err
@@ -197,7 +199,7 @@ func createInitialDatabaseCommandsIfNotExists(db *gorm.DB, baseCommands []Comman
 			}
 		}
 
-		if !reflect.DeepEqual(command.Counter, Counter{}) {
+		if !reflect.DeepEqual(command.Counter, model.Counter{}) {
 			if err := db.First(&command.Counter, command.Counter).Error; err != nil {
 				return err
 			}

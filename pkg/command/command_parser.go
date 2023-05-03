@@ -12,7 +12,7 @@ func ParseIncomingMessagesToCommands(incomingMessagesChannel <-chan struct {
 	Message     string
 	IsModerator bool
 },
-	outgoingCommandsChannel chan<- CommandExecutionDetails) {
+	outgoingCommandsChannel chan<- CommandExecutionMetadata) {
 
 	for messageDetails := range incomingMessagesChannel {
 		if command, err := ParseCommand(messageDetails); err == nil {
@@ -25,10 +25,10 @@ func ParseCommand(messageDetails struct {
 	UserName    string
 	Message     string
 	IsModerator bool
-}) (CommandExecutionDetails, error) {
+}) (CommandExecutionMetadata, error) {
 	userName, message, isModerator := messageDetails.UserName, messageDetails.Message, messageDetails.IsModerator
 	if len(message) == 0 || message[0:1] != commandSignifier {
-		return CommandExecutionDetails{}, errors.New("not a command")
+		return CommandExecutionMetadata{}, errors.New("not a command")
 	}
 
 	words := strings.Fields(message)
@@ -36,5 +36,5 @@ func ParseCommand(messageDetails struct {
 	commandName := words[0][1:]
 	arguments := words[1:]
 
-	return CommandExecutionDetails{UserName: userName, IsModerator: isModerator, CommandName: commandName, Arguments: arguments}, nil
+	return CommandExecutionMetadata{UserName: userName, IsModerator: isModerator, CommandName: commandName, Arguments: arguments}, nil
 }
