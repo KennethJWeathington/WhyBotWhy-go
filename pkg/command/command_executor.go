@@ -34,39 +34,20 @@ func executeCommand(db *gorm.DB, commandExecutionMetadata CommandExecutionMetada
 		return
 	}
 
-	//TODO: Move template logic here and combine with other data to pass down to handler methods, figure out counters
+	// if(command.CommandType.Name ) //TODO: possibly check that command type exists
 
 	switch command.CommandType.Name {
-	case command_type.TextCommandType:
-		executeTextCommand(db, command, commandExecutionMetadata, outgoingMessageChannel)
-	// case "increment_count":
-	// 	executeIncrementCountCommand(db, command, commandExecutionMetadata, outgoingMessageChannel)
-	// case "increment_count_by_user":
-	// 	executeIncrementCountByUserCommand(db, command, commandExecutionMetadata, outgoingMessageChannel)
-	// case "set_count":
-	// 	executeSetCountCommand(db, command, commandExecutionMetadata, outgoingMessageChannel)
-	// case "add_text_command":
-	// 	executeAddTextCommand(db, command, commandExecutionMetadata, outgoingMessageChannel)
-	// case "remove_text_command":
-	// 	executeRemoveTextCommand(db, command, commandExecutionMetadata, outgoingMessageChannel)
-	default:
-		outgoingMessageChannel <- "Command type not found." //TODO: Add logging, move to global constant
+	case command_type.IncrementCountCommandType:
+		executeIncrementCountCommand(db, command, commandExecutionMetadata)
+		// case "increment_count_by_user":
+		// 	executeIncrementCountByUserCommand(db, command, commandExecutionMetadata)
+		// case "set_count":
+		// 	executeSetCountCommand(db, command, commandExecutionMetadata)
+		// case "add_text_command":
+		// 	executeAddTextCommand(db, command, commandExecutionMetadata)
+		// case "remove_text_command":
+		// 	executeRemoveTextCommand(db, command, commandExecutionMetadata)
 
-	}
-}
-
-func getCommandFromName(db *gorm.DB, commandName string) model.Command {
-	var command model.Command
-	if err := db.Preload("CommandType").Preload("CommandTexts").Preload("CommandTexts.CommandTextType").Preload("Counter").First(&command, "name = ?", commandName).Error; err != nil {
-		return model.Command{}
-	}
-	return command
-}
-
-func executeTextCommand(db *gorm.DB, command model.Command, commandExecutionMetadata CommandExecutionMetadata, outgoingMessageChannel chan<- string) {
-	if len(command.CommandTexts) == 0 {
-		outgoingMessageChannel <- "No text found for command." //TODO: Add logging, move to global constant
-		return
 	}
 
 	templateVariables := []string{}
@@ -80,11 +61,18 @@ func executeTextCommand(db *gorm.DB, command model.Command, commandExecutionMeta
 	for _, commandText := range command.CommandTexts {
 		fullCommandText, err := buildTemplatedString(commandText.Text, templateVariableValues)
 		if err != nil {
-			outgoingMessageChannel <- "Error building templated string." //TODO: Add logging, move to global constant
-			return
+			return //TODO: add logging
 		}
 		outgoingMessageChannel <- fullCommandText
 	}
+}
+
+func getCommandFromName(db *gorm.DB, commandName string) model.Command {
+	var command model.Command
+	if err := db.Preload("CommandType").Preload("CommandTexts").Preload("CommandTexts.CommandTextType").Preload("Counter").First(&command, "name = ?", commandName).Error; err != nil {
+		return model.Command{}
+	}
+	return command
 }
 
 func getTemplateVariables(template string) []string {
@@ -119,13 +107,19 @@ func buildTemplatedString(templateText string, templateVariableValues map[string
 
 	template, err := template.New("").Parse(templateText)
 	if err != nil {
-		return "", err //TODO: add logging
+		return "", err
 	}
 
 	err = template.Execute(builder, templateVariableValues)
 	if err != nil {
-		return "", err //TODO: add logging
+		return "", err
 	}
 
 	return builder.String(), nil
+}
+
+func executeIncrementCountCommand(db *gorm.DB, command model.Command, commandExecutionMetadata CommandExecutionMetadata) {
+	if err := db.Model(&command.Counter).Update("count", gorm.Expr("count + ?", 1)).Error; err != nil {
+		return //TODO: add logging
+	}
 }
