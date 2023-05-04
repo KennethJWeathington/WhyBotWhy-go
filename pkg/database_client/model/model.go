@@ -15,6 +15,7 @@ type CounterByUser struct {
 	gorm.Model
 	UserName  string
 	CounterID uint
+	Count     int `gorm:"default 0"`
 }
 
 type CommandTextType struct {

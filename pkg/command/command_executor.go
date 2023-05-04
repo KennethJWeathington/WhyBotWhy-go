@@ -2,9 +2,6 @@ package command
 
 import (
 	"reflect"
-	"regexp"
-	"strings"
-	"text/template"
 
 	"github.com/jake-weath/whybotwhy_go/pkg/command/command_type"
 	"github.com/jake-weath/whybotwhy_go/pkg/database_client/model"
@@ -38,9 +35,9 @@ func executeCommand(db *gorm.DB, commandExecutionMetadata CommandExecutionMetada
 
 	switch command.CommandType.Name {
 	case command_type.IncrementCountCommandType:
-		executeIncrementCountCommand(db, command, commandExecutionMetadata)
-		// case "increment_count_by_user":
-		// 	executeIncrementCountByUserCommand(db, command, commandExecutionMetadata)
+		executeIncrementCountCommand(db, command)
+	case "increment_count_by_user":
+		executeIncrementCountByUserCommand(db, command, commandExecutionMetadata.UserName)
 		// case "set_count":
 		// 	executeSetCountCommand(db, command, commandExecutionMetadata)
 		// case "add_text_command":
@@ -50,24 +47,18 @@ func executeCommand(db *gorm.DB, commandExecutionMetadata CommandExecutionMetada
 
 	}
 
-	templateVariables := []string{}
+	templateVariables := getCommandTextVariables(command.CommandTexts)
 
-	for _, commandText := range command.CommandTexts {
-		templateVariables = append(templateVariables, getTemplateVariables(commandText.Text)...)
-	}
+	templateVariableValues := getCommandTextVariableValues(templateVariables, commandExecutionMetadata, command)
 
-	templateVariableValues := getTemplateVariableValues(templateVariables, commandExecutionMetadata, command)
+	builtCommandTexts := getBuiltCommandTexts(command.CommandTexts, templateVariableValues)
 
-	for _, commandText := range command.CommandTexts {
-		fullCommandText, err := buildTemplatedString(commandText.Text, templateVariableValues)
-		if err != nil {
-			return //TODO: add logging
-		}
-		outgoingMessageChannel <- fullCommandText
+	for _, builtCommandText := range builtCommandTexts {
+		outgoingMessageChannel <- builtCommandText
 	}
 }
 
-func getCommandFromName(db *gorm.DB, commandName string) model.Command {
+func getCommandFromName(db *gorm.DB, commandName string) model.Command { //TODO: remove this function and replace with a syncmap
 	var command model.Command
 	if err := db.Preload("CommandType").Preload("CommandTexts").Preload("CommandTexts.CommandTextType").Preload("Counter").First(&command, "name = ?", commandName).Error; err != nil {
 		return model.Command{}
@@ -75,51 +66,26 @@ func getCommandFromName(db *gorm.DB, commandName string) model.Command {
 	return command
 }
 
-func getTemplateVariables(template string) []string {
-	regExp, _ := regexp.Compile(`{{\.(.*?)}}`)
-	templateVariables := regExp.FindAllString(template, -1)
-
-	for i, templateVariable := range templateVariables {
-		templateVariables[i] = strings.Trim(templateVariable, "{.}")
-	}
-	return templateVariables
-}
-
-func getTemplateVariableValues(templateVariables []string, commandExecutionMetadata CommandExecutionMetadata, command model.Command) map[string]string {
-	templateVariableValues := map[string]string{}
-	for _, templateVariable := range templateVariables {
-		templateVariableValues[templateVariable] = getTemplateVariableValue(templateVariable, commandExecutionMetadata)
-	}
-	return templateVariableValues
-}
-
-func getTemplateVariableValue(templateVariable string, commandExecutionMetadata CommandExecutionMetadata) string {
-	switch templateVariable {
-	case "chatUserName":
-		return commandExecutionMetadata.UserName
-	default:
-		return ""
-	}
-}
-
-func buildTemplatedString(templateText string, templateVariableValues map[string]string) (string, error) {
-	builder := &strings.Builder{}
-
-	template, err := template.New("").Parse(templateText)
-	if err != nil {
-		return "", err
-	}
-
-	err = template.Execute(builder, templateVariableValues)
-	if err != nil {
-		return "", err
-	}
-
-	return builder.String(), nil
-}
-
-func executeIncrementCountCommand(db *gorm.DB, command model.Command, commandExecutionMetadata CommandExecutionMetadata) {
+func executeIncrementCountCommand(db *gorm.DB, command model.Command) {
 	if err := db.Model(&command.Counter).Update("count", gorm.Expr("count + ?", 1)).Error; err != nil {
+		return //TODO: add logging
+	}
+}
+
+func executeIncrementCountByUserCommand(db *gorm.DB, command model.Command, userName string) {
+	var counter model.Counter
+	var counterByUser model.CounterByUser
+
+	if err := db.First(&counter, "id = ?", command.CounterID).Error; err != nil {
+		return //TODO: add logging
+	}
+	if err := db.FirstOrCreate(&counterByUser, model.CounterByUser{UserName: userName, CounterID: counter.ID, Count: 0}).Error; err != nil { //ERROR: not creating new counter by user
+		return //TODO: add logging
+	}
+	if err := db.Model(&counter).Update("count", gorm.Expr("count + ?", 1)).Error; err != nil {
+		return //TODO: add logging
+	}
+	if err := db.Model(&counterByUser).Update("count", gorm.Expr("count + ?", 1)).Error; err != nil {
 		return //TODO: add logging
 	}
 }
