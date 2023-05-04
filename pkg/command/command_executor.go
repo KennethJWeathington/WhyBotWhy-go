@@ -36,7 +36,7 @@ func executeCommand(db *gorm.DB, commandExecutionMetadata CommandExecutionMetada
 	switch command.CommandType.Name {
 	case command_type.IncrementCountCommandType:
 		executeIncrementCountCommand(db, command)
-	case "increment_count_by_user":
+	case command_type.IncrementCountByUserCommandType:
 		executeIncrementCountByUserCommand(db, command, commandExecutionMetadata.UserName)
 		// case "set_count":
 		// 	executeSetCountCommand(db, command, commandExecutionMetadata)
@@ -79,7 +79,7 @@ func executeIncrementCountByUserCommand(db *gorm.DB, command model.Command, user
 	if err := db.First(&counter, "id = ?", command.CounterID).Error; err != nil {
 		return //TODO: add logging
 	}
-	if err := db.FirstOrCreate(&counterByUser, model.CounterByUser{UserName: userName, CounterID: counter.ID, Count: 0}).Error; err != nil { //ERROR: not creating new counter by user
+	if err := db.FirstOrCreate(&counterByUser, model.CounterByUser{UserName: userName, CounterID: counter.ID}).Error; err != nil { //ERROR: not creating new counter by user
 		return //TODO: add logging
 	}
 	if err := db.Model(&counter).Update("count", gorm.Expr("count + ?", 1)).Error; err != nil {

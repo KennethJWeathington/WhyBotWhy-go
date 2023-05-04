@@ -31,7 +31,7 @@ var baseCommandTextTypes = []model.CommandTextType{
 
 var baseCommands = []model.Command{
 	{Name: "whyme",
-		CommandType: model.CommandType{Name: "text"},
+		CommandType: model.CommandType{Name: command_type.TextCommandType},
 		CommandTexts: []model.CommandText{
 			{Text: "WHY {{.chatUserName}} WHY!?",
 				NeedsUserInfo: true,
@@ -39,7 +39,7 @@ var baseCommands = []model.Command{
 		},
 	},
 	{Name: "death",
-		CommandType: model.CommandType{Name: "increment_count"},
+		CommandType: model.CommandType{Name: command_type.IncrementCountCommandType},
 		CommandTexts: []model.CommandText{
 			{Text: "{{.streamName}} has died embarrassingly {{.deaths}} times on stream!",
 				NeedsStreamInfo:  true,
@@ -49,7 +49,7 @@ var baseCommands = []model.Command{
 		Counter: model.Counter{Name: "deaths"},
 	},
 	{Name: "setdeaths",
-		CommandType: model.CommandType{Name: "set_count"},
+		CommandType: model.CommandType{Name: command_type.SetCountCommandType},
 		CommandTexts: []model.CommandText{
 			{Text: "Deaths set to {{.deaths}}.",
 				NeedsCounterInfo: true,
@@ -59,7 +59,7 @@ var baseCommands = []model.Command{
 		IsModeratorOnly: true,
 	},
 	{Name: "boop",
-		CommandType: model.CommandType{Name: "increment_count"},
+		CommandType: model.CommandType{Name: command_type.IncrementCountByUserCommandType},
 		CommandTexts: []model.CommandText{
 			{Text: "{{.chatUserName}} booped the snoot! The snoot has been booped {{.boops}} times.",
 				NeedsUserInfo:    true,
@@ -69,10 +69,10 @@ var baseCommands = []model.Command{
 		Counter: model.Counter{Name: "boops"},
 	},
 	{Name: "boopboard",
-		CommandType: model.CommandType{Name: "text"},
+		CommandType: model.CommandType{Name: command_type.TextCommandType},
 		CommandTexts: []model.CommandText{
 			{Text: "Top Boopers",
-				CommandTextType: model.CommandTextType{Name: "header"},
+				CommandTextType: model.CommandTextType{Name: "header"}, //TODO replace CommandTextType Name with constants
 			},
 			{Text: "{{.row}}. @{{.chatUserName}}: ${{countByUser}} boops",
 				CommandTextType:  model.CommandTextType{Name: "body"},
@@ -93,7 +93,7 @@ var baseCommands = []model.Command{
 		Counter: model.Counter{Name: "boops"},
 	},
 	{Name: "addcommand",
-		CommandType: model.CommandType{Name: "add_text_command"},
+		CommandType: model.CommandType{Name: command_type.AddTextCommandType},
 		CommandTexts: []model.CommandText{
 			{Text: "Command added.",
 				CommandTextType: model.CommandTextType{Name: "success"},
@@ -105,7 +105,7 @@ var baseCommands = []model.Command{
 		IsModeratorOnly: true,
 	},
 	{Name: "removecommand",
-		CommandType: model.CommandType{Name: "remove_text_command"},
+		CommandType: model.CommandType{Name: command_type.RemoveTextCommandType},
 		CommandTexts: []model.CommandText{
 			{Text: "Command removed.",
 				CommandTextType: model.CommandTextType{Name: "success"},
@@ -117,7 +117,7 @@ var baseCommands = []model.Command{
 		IsModeratorOnly: true,
 	},
 	{Name: "rules",
-		CommandType: model.CommandType{Name: "text"},
+		CommandType: model.CommandType{Name: command_type.TextCommandType},
 		CommandTexts: []model.CommandText{
 			{Text: "Please remember the channel rules:"},
 			{Text: "1. Be kind"},
@@ -127,7 +127,7 @@ var baseCommands = []model.Command{
 		},
 	},
 	{Name: "commands",
-		CommandType: model.CommandType{Name: "text"},
+		CommandType: model.CommandType{Name: command_type.TextCommandType},
 		CommandTexts: []model.CommandText{
 			{Text: `The current commands are: {{.commands}}`},
 		},
