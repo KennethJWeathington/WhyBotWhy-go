@@ -30,9 +30,6 @@ type CommandText struct {
 	CustomTextQuery   string
 	CommandTextTypeID uint
 	CommandTextType   CommandTextType
-	NeedsStreamInfo   bool `gorm:"default false"`
-	NeedsUserInfo     bool `gorm:"default false"`
-	NeedsCounterInfo  bool `gorm:"default false"`
 }
 
 type CommandType struct {
