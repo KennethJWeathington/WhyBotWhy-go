@@ -35,11 +35,11 @@ func executeCommand(db *gorm.DB, commandExecutionMetadata CommandExecutionMetada
 
 	switch command.CommandType.Name {
 	case command_type.IncrementCountCommandType:
-		executeIncrementCountCommand(db, command)
+		executeIncrementCountCommand(db, command.Counter)
 	case command_type.IncrementCountByUserCommandType:
 		executeIncrementCountByUserCommand(db, command, commandExecutionMetadata.UserName)
-		// case "set_count":
-		// 	executeSetCountCommand(db, command, commandExecutionMetadata)
+	case command_type.SetCountCommandType:
+		executeSetCountCommand(db, command.Counter, commandExecutionMetadata.Arguments)
 		// case "add_text_command":
 		// 	executeAddTextCommand(db, command, commandExecutionMetadata)
 		// case "remove_text_command":
@@ -66,17 +66,17 @@ func getCommandFromName(db *gorm.DB, commandName string) model.Command { //TODO:
 	return command
 }
 
-func executeIncrementCountCommand(db *gorm.DB, command model.Command) {
-	if err := db.Model(&command.Counter).Update("count", gorm.Expr("count + ?", 1)).Error; err != nil {
+func executeIncrementCountCommand(db *gorm.DB, counter model.Counter) {
+	if err := db.Model(&counter).Update("count", gorm.Expr("count + ?", 1)).Error; err != nil {
 		return //TODO: add logging
 	}
 }
 
-func executeIncrementCountByUserCommand(db *gorm.DB, command model.Command, userName string) {
+func executeIncrementCountByUserCommand(db *gorm.DB, command model.Command, userName string) { //TODO: refactor this to accept better arguments
 	var counter model.Counter
 	var counterByUser model.CounterByUser
 
-	if err := db.First(&counter, "id = ?", command.CounterID).Error; err != nil {
+	if err := db.First(&counter, "id = ?", command.CounterID).Error; err != nil { //TODO: Add error catching if none found
 		return //TODO: add logging
 	}
 	if err := db.FirstOrCreate(&counterByUser, model.CounterByUser{UserName: userName, CounterID: counter.ID}).Error; err != nil { //ERROR: not creating new counter by user
@@ -86,6 +86,18 @@ func executeIncrementCountByUserCommand(db *gorm.DB, command model.Command, user
 		return //TODO: add logging
 	}
 	if err := db.Model(&counterByUser).Update("count", gorm.Expr("count + ?", 1)).Error; err != nil {
+		return //TODO: add logging
+	}
+}
+
+func executeSetCountCommand(db *gorm.DB, counter model.Counter, commandArguments []string) {
+	if len(commandArguments) == 0 {
+		return //TODO: add logging
+	}
+
+	newCount := commandArguments[0]
+
+	if err := db.Model(&counter).Update("count", newCount).Error; err != nil {
 		return //TODO: add logging
 	}
 }
