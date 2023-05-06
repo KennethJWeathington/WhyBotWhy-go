@@ -39,11 +39,11 @@ func executeCommand(db *gorm.DB, commandExecutionMetadata CommandExecutionMetada
 
 	switch command.CommandType.Name { //TODO: Change the rest of these to return an error
 	case command_type.IncrementCountCommandType:
-		executeIncrementCountCommand(db, command.Counter)
+		err = executeIncrementCountCommand(db, command.Counter)
 	case command_type.IncrementCountByUserCommandType:
-		executeIncrementCountByUserCommand(db, command, commandExecutionMetadata.UserName)
+		err = executeIncrementCountByUserCommand(db, command, commandExecutionMetadata.UserName)
 	case command_type.SetCountCommandType:
-		executeSetCountCommand(db, command.Counter, commandExecutionMetadata.Arguments)
+		err = executeSetCountCommand(db, command.Counter, commandExecutionMetadata.Arguments)
 	case command_type.AddTextCommandType:
 		err = executeAddTextCommand(db, commandExecutionMetadata.Arguments) //BUG: If you add a command a second time it sends the success and failure message
 	case command_type.RemoveTextCommandType:
@@ -51,7 +51,7 @@ func executeCommand(db *gorm.DB, commandExecutionMetadata CommandExecutionMetada
 	}
 
 	if err != nil {
-		sendFailureMessage(command, err, outgoingMessageChannel)
+		sendFailureMessage(err, outgoingMessageChannel)
 		return
 	}
 
@@ -60,7 +60,7 @@ func executeCommand(db *gorm.DB, commandExecutionMetadata CommandExecutionMetada
 
 func getCommandAndChildrenFromName(db *gorm.DB, commandName string) model.Command { //TODO: remove this function and replace with a syncmap
 	var command model.Command
-	if err := db.Preload("CommandType").Preload("CommandTexts").Preload("CommandTexts.CommandTextType").Preload("Counter").First(&command, "name = ?", commandName).Error; err != nil {
+	if err := db.Preload("CommandType").Preload("CommandTexts").Preload("Counter").First(&command, "name = ?", commandName).Error; err != nil {
 		return model.Command{}
 	}
 	return command
@@ -68,82 +68,68 @@ func getCommandAndChildrenFromName(db *gorm.DB, commandName string) model.Comman
 
 func getCommandFromName(db *gorm.DB, commandName string) model.Command { //TODO: remove this function and replace with a syncmap
 	var command model.Command
-	if err := db.Preload("CommandType").Preload("CommandTexts").Preload("CommandTexts.CommandTextType").Preload("Counter").First(&command, "name = ?", commandName).Error; err != nil {
+	if err := db.First(&command, "name = ?", commandName).Error; err != nil {
 		return model.Command{}
 	}
 	return command
 }
 
 func sendCommandText(command model.Command, db *gorm.DB, commandExecutionMetadata CommandExecutionMetadata, outgoingMessageChannel chan<- string) {
-	nonFailureCommandTexts := make([]model.CommandText, 0)
-
-	for _, commandText := range command.CommandTexts {
-		if commandText.CommandTextType.Name != "failure" {
-			nonFailureCommandTexts = append(nonFailureCommandTexts, commandText)
-		}
-	}
-
-	templateVariables := getCommandTextVariables(nonFailureCommandTexts)
+	templateVariables := getCommandTextVariables(command.CommandTexts)
 
 	templateVariableValues := getCommandTextVariableValues(templateVariables, db, commandExecutionMetadata, command)
 
-	builtCommandTexts := getBuiltCommandTexts(nonFailureCommandTexts, templateVariableValues)
+	builtCommandTexts := getBuiltCommandTexts(command.CommandTexts, templateVariableValues)
 
 	for _, builtCommandText := range builtCommandTexts {
 		outgoingMessageChannel <- builtCommandText
 	}
 }
 
-func sendFailureMessage(command model.Command, err error, outgoingMessageChannel chan<- string) {
-	var failureCommandText string
-
-	for _, commandText := range command.CommandTexts {
-		if commandText.CommandTextType.Name == "failure" {
-			failureCommandText = commandText.Text
-		}
-	}
-
-	if failureCommandText == "" {
-		failureCommandText = "Error executing command: " + err.Error()
-	}
-
-	outgoingMessageChannel <- failureCommandText
+func sendFailureMessage(err error, outgoingMessageChannel chan<- string) {
+	outgoingMessageChannel <- err.Error()
 }
 
-func executeIncrementCountCommand(db *gorm.DB, counter model.Counter) {
+func executeIncrementCountCommand(db *gorm.DB, counter model.Counter) error {
 	if err := db.Model(&counter).Update("count", gorm.Expr("count + ?", 1)).Error; err != nil {
-		return //TODO: add logging
+		return err
 	}
+
+	return nil
 }
 
-func executeIncrementCountByUserCommand(db *gorm.DB, command model.Command, userName string) { //TODO: refactor this to accept better arguments
+func executeIncrementCountByUserCommand(db *gorm.DB, command model.Command, userName string) error { //TODO: refactor this to accept better arguments
 	var counter model.Counter
 	var counterByUser model.CounterByUser
 
 	if err := db.First(&counter, "id = ?", command.CounterID).Error; err != nil { //TODO: Add error catching if none found
-		return //TODO: add logging
+		return err
 	}
 	if err := db.FirstOrCreate(&counterByUser, model.CounterByUser{UserName: userName, CounterID: counter.ID}).Error; err != nil { //ERROR: not creating new counter by user
-		return //TODO: add logging
+		return err
 	}
 	if err := db.Model(&counter).Update("count", gorm.Expr("count + ?", 1)).Error; err != nil {
-		return //TODO: add logging
+		return err
 	}
 	if err := db.Model(&counterByUser).Update("count", gorm.Expr("count + ?", 1)).Error; err != nil {
-		return //TODO: add logging
+		return err
 	}
+
+	return nil
 }
 
-func executeSetCountCommand(db *gorm.DB, counter model.Counter, commandArguments []string) {
+func executeSetCountCommand(db *gorm.DB, counter model.Counter, commandArguments []string) error {
 	if len(commandArguments) == 0 {
-		return //TODO: add logging
+		return errors.New("invalid arguments")
 	}
 
 	newCount := commandArguments[0]
 
 	if err := db.Model(&counter).Update("count", newCount).Error; err != nil {
-		return //TODO: add logging
+		return err
 	}
+
+	return nil
 }
 
 func executeAddTextCommand(db *gorm.DB, commandArguments []string) error {
@@ -163,7 +149,7 @@ func executeAddTextCommand(db *gorm.DB, commandArguments []string) error {
 	}
 
 	if err := db.Create(&newCommand).Error; err != nil {
-		return err
+		return errors.New("command already exists")
 	}
 
 	return nil

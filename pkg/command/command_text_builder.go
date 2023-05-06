@@ -63,7 +63,7 @@ func buildTemplatedString(templateText string, templateVariableValues map[string
 	return builder.String()
 }
 
-func getTemplateVariableValue(templateVariable string, db *gorm.DB, commandExecutionMetadata CommandExecutionMetadata, command model.Command) string {
+func getTemplateVariableValue(templateVariable string, db *gorm.DB, commandExecutionMetadata CommandExecutionMetadata, command model.Command) string { //TODO: Refactor this to use less arguments
 	switch templateVariable {
 	case "chatUserName":
 		return commandExecutionMetadata.UserName

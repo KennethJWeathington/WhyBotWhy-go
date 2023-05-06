@@ -22,22 +22,14 @@ type CounterByUser struct {
 	Count     int `gorm:"default 0"`
 }
 
-type CommandTextType struct { //TODO: Remove this type and remove all references to it
-	ID        uint `gorm:"primarykey"`
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	Name      string `gorm:"unique"`
-}
-
 type CommandText struct {
-	ID                uint `gorm:"primarykey"`
-	CreatedAt         time.Time
-	UpdatedAt         time.Time
-	CommandID         uint   `gorm:"not null"`
-	Text              string `gorm:"not null"`
-	CustomTextQuery   string
-	CommandTextTypeID uint
-	CommandTextType   CommandTextType
+	ID              uint `gorm:"primarykey"`
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
+	CommandID       uint   `gorm:"not null"`
+	Text            string `gorm:"not null"`
+	CustomTextQuery string
+	Order           int
 }
 
 type CommandType struct {

@@ -23,13 +23,6 @@ var baseCommandTypes = []model.CommandType{
 	{Name: command_type.UserEnteredTextCommandType},
 }
 
-var baseCommandTextTypes = []model.CommandTextType{
-	{Name: "success"},
-	{Name: "failure"},
-	{Name: "header"},
-	{Name: "body"},
-}
-
 var baseCommands = []model.Command{
 	{Name: "whyme",
 		CommandType: model.CommandType{Name: command_type.TextCommandType},
@@ -62,17 +55,15 @@ var baseCommands = []model.Command{
 	{Name: "boopboard",
 		CommandType: model.CommandType{Name: command_type.TextCommandType},
 		CommandTexts: []model.CommandText{
-			{Text: "Top Boopers",
-				CommandTextType: model.CommandTextType{Name: "header"}, //TODO replace CommandTextType Name with constants
-			},
+			{Text: "Top Boopers"},
 			{Text: "1. @{{.chatUserName}}: ${{countByUser}} boops",
-				CommandTextType: model.CommandTextType{Name: "body"},
+				Order: 1,
 			},
 			{Text: "2. @{{.chatUserName}}: ${{countByUser}} boops",
-				CommandTextType: model.CommandTextType{Name: "body"},
+				Order: 2,
 			},
 			{Text: "3. @{{.chatUserName}}: ${{countByUser}} boops",
-				CommandTextType: model.CommandTextType{Name: "body"},
+				Order: 3,
 			},
 		},
 		Counter: model.Counter{Name: "boops"},
@@ -80,24 +71,14 @@ var baseCommands = []model.Command{
 	{Name: "addcommand",
 		CommandType: model.CommandType{Name: command_type.AddTextCommandType},
 		CommandTexts: []model.CommandText{
-			{Text: "Command added.",
-				CommandTextType: model.CommandTextType{Name: "success"},
-			},
-			{Text: "Command already exists.",
-				CommandTextType: model.CommandTextType{Name: "failure"},
-			},
+			{Text: "Command added."},
 		},
 		IsModeratorOnly: true,
 	},
 	{Name: "removecommand",
 		CommandType: model.CommandType{Name: command_type.RemoveTextCommandType},
 		CommandTexts: []model.CommandText{
-			{Text: "Command removed.",
-				CommandTextType: model.CommandTextType{Name: "success"},
-			},
-			{Text: "Command not found.",
-				CommandTextType: model.CommandTextType{Name: "failure"},
-			},
+			{Text: "Command removed."},
 		},
 		IsModeratorOnly: true,
 	},
@@ -126,11 +107,6 @@ func CreateInitialDatabaseData(db *gorm.DB) error {
 		return err
 	}
 
-	db.AutoMigrate(&model.CommandTextType{})
-	if err := createInitialDatabaseCommandTextTypesIfNotExists(db, baseCommandTextTypes); err != nil {
-		return err
-	}
-
 	db.AutoMigrate(&model.CommandType{})
 	if err := createInitialDatabaseCommandTypesIfNotExists(db, baseCommandTypes); err != nil {
 		return err
@@ -154,15 +130,6 @@ func createInitialDatabaseCountersIfNotExists(db *gorm.DB, baseCounters []model.
 	return nil
 }
 
-func createInitialDatabaseCommandTextTypesIfNotExists(db *gorm.DB, baseCommandTextTypes []model.CommandTextType) error {
-	for _, commandTextType := range baseCommandTextTypes {
-		if err := db.FirstOrCreate(&commandTextType, commandTextType).Error; err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 func createInitialDatabaseCommandTypesIfNotExists(db *gorm.DB, baseCommandTypes []model.CommandType) error {
 	for _, commandType := range baseCommandTypes {
 		if err := db.FirstOrCreate(&commandType, commandType).Error; err != nil {
@@ -176,12 +143,6 @@ func createInitialDatabaseCommandsIfNotExists(db *gorm.DB, baseCommands []model.
 	for _, command := range baseCommands {
 		if err := db.First(&command.CommandType, command.CommandType).Error; err != nil {
 			return err
-		}
-
-		for idx := range command.CommandTexts {
-			if err := db.First(&command.CommandTexts[idx].CommandTextType, command.CommandTexts[idx].CommandTextType).Error; err != nil {
-				return err
-			}
 		}
 
 		if !reflect.DeepEqual(command.Counter, model.Counter{}) {

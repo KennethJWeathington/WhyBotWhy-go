@@ -21,6 +21,6 @@ func ConnectToDatabase(databaseName string) *gorm.DB {
 
 func GetAllCommands(db *gorm.DB) []model.Command {
 	var commands []model.Command
-	db.Preload("CommandType").Preload("CommandTexts").Preload("CommandTexts.CommandTextType").Preload("Counter").Find(&commands)
+	db.Preload("CommandType").Preload("CommandTexts").Preload("Counter").Find(&commands)
 	return commands
 }
