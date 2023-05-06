@@ -24,7 +24,7 @@ func ExecuteCommands(db *gorm.DB, commandExecutionMetadataChannel <-chan Command
 }
 
 func executeCommand(db *gorm.DB, commandExecutionMetadata CommandExecutionMetadata, outgoingMessageChannel chan<- string) {
-	command := getCommandFromName(db, commandExecutionMetadata.CommandName)
+	command := getCommandAndChildrenFromName(db, commandExecutionMetadata.CommandName)
 	if reflect.DeepEqual(command, model.Command{}) { //TODO: Replace reflect.DeepEqual with custom equality function
 		return
 	}
@@ -48,14 +48,22 @@ func executeCommand(db *gorm.DB, commandExecutionMetadata CommandExecutionMetada
 		err = executeAddTextCommand(db, commandExecutionMetadata.Arguments) //BUG: If you add a command a second time it sends the success and failure message
 	case command_type.RemoveTextCommandType:
 		err = executeRemoveTextCommand(db, commandExecutionMetadata.Arguments) //BUG: Sends the success and failure message
-
 	}
 
 	if err != nil {
 		sendFailureMessage(command, err, outgoingMessageChannel)
+		return
 	}
 
 	sendCommandText(command, commandExecutionMetadata, outgoingMessageChannel)
+}
+
+func getCommandAndChildrenFromName(db *gorm.DB, commandName string) model.Command { //TODO: remove this function and replace with a syncmap
+	var command model.Command
+	if err := db.Preload("CommandType").Preload("CommandTexts").Preload("CommandTexts.CommandTextType").Preload("Counter").First(&command, "name = ?", commandName).Error; err != nil {
+		return model.Command{}
+	}
+	return command
 }
 
 func getCommandFromName(db *gorm.DB, commandName string) model.Command { //TODO: remove this function and replace with a syncmap
@@ -144,6 +152,7 @@ func executeAddTextCommand(db *gorm.DB, commandArguments []string) error {
 	}
 
 	commandName := commandArguments[0]
+
 	commandText := strings.Join(commandArguments[1:], " ")
 
 	newCommand := model.Command{Name: commandName,
@@ -167,10 +176,18 @@ func executeRemoveTextCommand(db *gorm.DB, commandArguments []string) error {
 
 	commandName := commandArguments[0]
 
-	if err := db.Delete(&model.Command{}, "name = ?", commandName).Error; err != nil {
-		return err
-	} else if db.RowsAffected == 0 {
+	command := getCommandFromName(db, commandName)
+
+	if command.ID == 0 {
 		return errors.New("command not found")
+	}
+
+	if err := db.Delete(&model.CommandText{}, "command_id = ?", command.ID).Error; err != nil {
+		return err
+	}
+
+	if err := db.Delete(&model.Command{}, command).Error; err != nil {
+		return err
 	}
 
 	return nil

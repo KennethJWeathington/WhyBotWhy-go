@@ -1,30 +1,38 @@
 package model
 
 import (
-	"gorm.io/gorm"
+	"time"
 )
 
 type Counter struct {
-	gorm.Model
+	ID             uint `gorm:"primarykey"`
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
 	Name           string `gorm:"unique"`
 	Count          int
 	CounterByUsers []CounterByUser
 }
 
 type CounterByUser struct {
-	gorm.Model
+	ID        uint `gorm:"primarykey"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
 	UserName  string
 	CounterID uint
 	Count     int `gorm:"default 0"`
 }
 
 type CommandTextType struct {
-	gorm.Model
-	Name string `gorm:"unique"`
+	ID        uint `gorm:"primarykey"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	Name      string `gorm:"unique"`
 }
 
 type CommandText struct {
-	gorm.Model
+	ID                uint `gorm:"primarykey"`
+	CreatedAt         time.Time
+	UpdatedAt         time.Time
 	CommandID         uint   `gorm:"not null"`
 	Text              string `gorm:"not null"`
 	CustomTextQuery   string
@@ -33,12 +41,16 @@ type CommandText struct {
 }
 
 type CommandType struct {
-	gorm.Model
-	Name string `gorm:"unique"`
+	ID        uint `gorm:"primarykey"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	Name      string `gorm:"unique"`
 }
 
 type Command struct {
-	gorm.Model
+	ID              uint `gorm:"primarykey"`
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
 	Name            string `gorm:"not null;unique"`
 	CommandTypeID   uint   `gorm:"not null"`
 	CommandType     CommandType
