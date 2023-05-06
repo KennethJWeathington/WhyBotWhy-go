@@ -30,7 +30,7 @@ func parseTemplateVariables(template string) []string {
 	return templateVariables
 }
 
-func getCommandTextVariableValues(templateVariables []string, db *gorm.DB, commandExecutionMetadata CommandExecutionMetadata, command model.Command) map[string]string {
+func getCommandTextVariableValues(db *gorm.DB, templateVariables []string, commandExecutionMetadata CommandExecutionMetadata, command model.Command) map[string]string {
 	templateVariableValues := map[string]string{}
 	for _, templateVariable := range templateVariables {
 		templateVariableValues[templateVariable] = getTemplateVariableValue(templateVariable, db, commandExecutionMetadata, command)
@@ -77,6 +77,7 @@ func getTemplateVariableValue(templateVariable string, db *gorm.DB, commandExecu
 		return strings.Join(getAllCommandNames(db), ", ")
 	case "count":
 		return strconv.Itoa(getCountFromDatabase(db, command))
+	// case "countByUserName", "countByUser": //TODO: implement
 	default:
 		return ""
 	}

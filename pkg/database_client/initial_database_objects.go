@@ -1,8 +1,6 @@
 package database_client
 
 import (
-	"reflect"
-
 	"github.com/jake-weath/whybotwhy_go/pkg/command/command_type"
 	"github.com/jake-weath/whybotwhy_go/pkg/database_client/model"
 	"gorm.io/gorm"
@@ -56,13 +54,13 @@ var baseCommands = []model.Command{
 		CommandType: model.CommandType{Name: command_type.TextCommandType}, //TODO: implement boopboard
 		CommandTexts: []model.CommandText{
 			{Text: "Top Boopers"},
-			{Text: "1. @{{.countByUserName}}: ${{countByUser}} boops",
+			{Text: "1. @{{.countByUserName}}: ${{.countByUser}} boops", //TODO: Come up with a way to parameterize this
 				Order: 1,
 			},
-			{Text: "2. @{{.countByUserName}}: ${{countByUser}} boops",
+			{Text: "2. @{{.countByUserName}}: ${{.countByUser}} boops",
 				Order: 2,
 			},
-			{Text: "3. @{{.countByUserName}}: ${{countByUser}} boops",
+			{Text: "3. @{{.countByUserName}}: ${{.countByUser}} boops",
 				Order: 3,
 			},
 		},
@@ -145,7 +143,7 @@ func createInitialDatabaseCommandsIfNotExists(db *gorm.DB, baseCommands []model.
 			return err
 		}
 
-		if !reflect.DeepEqual(command.Counter, model.Counter{}) {
+		if !command.Counter.Equals(model.Counter{}) {
 			if err := db.First(&command.Counter, command.Counter).Error; err != nil {
 				return err
 			}

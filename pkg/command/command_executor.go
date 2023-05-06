@@ -2,7 +2,6 @@ package command
 
 import (
 	"errors"
-	"reflect"
 	"strings"
 
 	"github.com/jake-weath/whybotwhy_go/pkg/command/command_type"
@@ -25,7 +24,7 @@ func ExecuteCommands(db *gorm.DB, commandExecutionMetadataChannel <-chan Command
 
 func executeCommand(db *gorm.DB, commandExecutionMetadata CommandExecutionMetadata, outgoingMessageChannel chan<- string) {
 	command := getCommandFromName(db, commandExecutionMetadata.CommandName)
-	if reflect.DeepEqual(command, model.Command{}) { //TODO: Replace reflect.DeepEqual with custom equality function
+	if command.Equals(model.Command{}) {
 		return
 	}
 
@@ -37,7 +36,7 @@ func executeCommand(db *gorm.DB, commandExecutionMetadata CommandExecutionMetada
 
 	var err error
 
-	switch command.CommandType.Name { //TODO: Change the rest of these to return an error
+	switch command.CommandType.Name {
 	case command_type.IncrementCountCommandType:
 		err = executeIncrementCountCommand(db, command.Counter)
 	case command_type.IncrementCountByUserCommandType:
@@ -45,9 +44,9 @@ func executeCommand(db *gorm.DB, commandExecutionMetadata CommandExecutionMetada
 	case command_type.SetCountCommandType:
 		err = executeSetCountCommand(db, command.Counter, commandExecutionMetadata.Arguments)
 	case command_type.AddTextCommandType:
-		err = executeAddTextCommand(db, commandExecutionMetadata.Arguments) //BUG: If you add a command a second time it sends the success and failure message
+		err = executeAddTextCommand(db, commandExecutionMetadata.Arguments)
 	case command_type.RemoveTextCommandType:
-		err = executeRemoveTextCommand(db, commandExecutionMetadata.Arguments) //BUG: Sends the success and failure message
+		err = executeRemoveTextCommand(db, commandExecutionMetadata.Arguments)
 	}
 
 	if err != nil {
@@ -55,7 +54,7 @@ func executeCommand(db *gorm.DB, commandExecutionMetadata CommandExecutionMetada
 		return
 	}
 
-	sendCommandText(command, db, commandExecutionMetadata, outgoingMessageChannel)
+	sendCommandText(db, command, commandExecutionMetadata, outgoingMessageChannel)
 }
 
 func getCommandFromName(db *gorm.DB, commandName string) model.Command { //TODO: remove this function and replace with a syncmap
@@ -66,10 +65,10 @@ func getCommandFromName(db *gorm.DB, commandName string) model.Command { //TODO:
 	return command
 }
 
-func sendCommandText(command model.Command, db *gorm.DB, commandExecutionMetadata CommandExecutionMetadata, outgoingMessageChannel chan<- string) {
+func sendCommandText(db *gorm.DB, command model.Command, commandExecutionMetadata CommandExecutionMetadata, outgoingMessageChannel chan<- string) {
 	templateVariables := getCommandTextVariables(command.CommandTexts)
 
-	templateVariableValues := getCommandTextVariableValues(templateVariables, db, commandExecutionMetadata, command)
+	templateVariableValues := getCommandTextVariableValues(db, templateVariables, commandExecutionMetadata, command)
 
 	builtCommandTexts := getBuiltCommandTexts(command.CommandTexts, templateVariableValues)
 

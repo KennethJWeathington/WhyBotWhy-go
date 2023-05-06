@@ -51,3 +51,29 @@ type Command struct {
 	Counter         Counter
 	IsModeratorOnly bool `gorm:"default false"`
 }
+
+func (command *Command) Equals(otherCommand Command) bool {
+	if command.Name != otherCommand.Name {
+		return false
+	}
+	if command.CounterID != otherCommand.CounterID {
+		return false
+	}
+	if command.CommandTypeID != otherCommand.CommandTypeID {
+		return false
+	}
+	if command.IsModeratorOnly != otherCommand.IsModeratorOnly {
+		return false
+	}
+	return true
+}
+
+func (counter *Counter) Equals(otherCounter Counter) bool {
+	if counter.Name != otherCounter.Name {
+		return false
+	}
+	if counter.Count != otherCounter.Count {
+		return false
+	}
+	return true
+}
