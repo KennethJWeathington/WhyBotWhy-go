@@ -55,7 +55,7 @@ func executeCommand(db *gorm.DB, commandExecutionMetadata CommandExecutionMetada
 		return
 	}
 
-	sendCommandText(command, commandExecutionMetadata, outgoingMessageChannel)
+	sendCommandText(command, db, commandExecutionMetadata, outgoingMessageChannel)
 }
 
 func getCommandAndChildrenFromName(db *gorm.DB, commandName string) model.Command { //TODO: remove this function and replace with a syncmap
@@ -74,7 +74,7 @@ func getCommandFromName(db *gorm.DB, commandName string) model.Command { //TODO:
 	return command
 }
 
-func sendCommandText(command model.Command, commandExecutionMetadata CommandExecutionMetadata, outgoingMessageChannel chan<- string) {
+func sendCommandText(command model.Command, db *gorm.DB, commandExecutionMetadata CommandExecutionMetadata, outgoingMessageChannel chan<- string) {
 	nonFailureCommandTexts := make([]model.CommandText, 0)
 
 	for _, commandText := range command.CommandTexts {
@@ -85,7 +85,7 @@ func sendCommandText(command model.Command, commandExecutionMetadata CommandExec
 
 	templateVariables := getCommandTextVariables(nonFailureCommandTexts)
 
-	templateVariableValues := getCommandTextVariableValues(templateVariables, commandExecutionMetadata, command)
+	templateVariableValues := getCommandTextVariableValues(templateVariables, db, commandExecutionMetadata, command)
 
 	builtCommandTexts := getBuiltCommandTexts(nonFailureCommandTexts, templateVariableValues)
 
