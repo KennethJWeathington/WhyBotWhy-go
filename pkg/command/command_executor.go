@@ -24,7 +24,7 @@ func ExecuteCommands(db *gorm.DB, commandExecutionMetadataChannel <-chan Command
 }
 
 func executeCommand(db *gorm.DB, commandExecutionMetadata CommandExecutionMetadata, outgoingMessageChannel chan<- string) {
-	command := getCommandAndChildrenFromName(db, commandExecutionMetadata.CommandName)
+	command := getCommandFromName(db, commandExecutionMetadata.CommandName)
 	if reflect.DeepEqual(command, model.Command{}) { //TODO: Replace reflect.DeepEqual with custom equality function
 		return
 	}
@@ -41,7 +41,7 @@ func executeCommand(db *gorm.DB, commandExecutionMetadata CommandExecutionMetada
 	case command_type.IncrementCountCommandType:
 		err = executeIncrementCountCommand(db, command.Counter)
 	case command_type.IncrementCountByUserCommandType:
-		err = executeIncrementCountByUserCommand(db, command, commandExecutionMetadata.UserName)
+		err = executeIncrementCountByUserCommand(db, command.Counter, commandExecutionMetadata.UserName)
 	case command_type.SetCountCommandType:
 		err = executeSetCountCommand(db, command.Counter, commandExecutionMetadata.Arguments)
 	case command_type.AddTextCommandType:
@@ -58,17 +58,9 @@ func executeCommand(db *gorm.DB, commandExecutionMetadata CommandExecutionMetada
 	sendCommandText(command, db, commandExecutionMetadata, outgoingMessageChannel)
 }
 
-func getCommandAndChildrenFromName(db *gorm.DB, commandName string) model.Command { //TODO: remove this function and replace with a syncmap
-	var command model.Command
-	if err := db.Preload("CommandType").Preload("CommandTexts").Preload("Counter").First(&command, "name = ?", commandName).Error; err != nil {
-		return model.Command{}
-	}
-	return command
-}
-
 func getCommandFromName(db *gorm.DB, commandName string) model.Command { //TODO: remove this function and replace with a syncmap
 	var command model.Command
-	if err := db.First(&command, "name = ?", commandName).Error; err != nil {
+	if err := db.Preload("CommandType").Preload("CommandTexts").Preload("Counter").First(&command, "name = ?", commandName).Error; err != nil {
 		return model.Command{}
 	}
 	return command
@@ -98,14 +90,10 @@ func executeIncrementCountCommand(db *gorm.DB, counter model.Counter) error {
 	return nil
 }
 
-func executeIncrementCountByUserCommand(db *gorm.DB, command model.Command, userName string) error { //TODO: refactor this to accept better arguments
-	var counter model.Counter
+func executeIncrementCountByUserCommand(db *gorm.DB, counter model.Counter, userName string) error {
 	var counterByUser model.CounterByUser
 
-	if err := db.First(&counter, "id = ?", command.CounterID).Error; err != nil { //TODO: Add error catching if none found
-		return err
-	}
-	if err := db.FirstOrCreate(&counterByUser, model.CounterByUser{UserName: userName, CounterID: counter.ID}).Error; err != nil { //ERROR: not creating new counter by user
+	if err := db.FirstOrCreate(&counterByUser, model.CounterByUser{UserName: userName, CounterID: counter.ID}).Error; err != nil {
 		return err
 	}
 	if err := db.Model(&counter).Update("count", gorm.Expr("count + ?", 1)).Error; err != nil {
