@@ -1,6 +1,7 @@
 package command
 
 import (
+	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
@@ -113,5 +114,13 @@ func getRandomQuote(db *gorm.DB) string {
 		return "No quotes found."
 	}
 
-	return quote.Text
+	formattedDate := quote.CreatedAt.Format("01/02/06")
+
+	env, err := godotenv.Read()
+	if err != nil {
+		return ""
+	}
+	streamName := env["CHANNEL_NAME"] //TODO: change the const this hits
+
+	return fmt.Sprintf("\"%s\" - %s, %s", quote.Text, streamName, formattedDate)
 }

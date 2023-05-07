@@ -37,7 +37,7 @@ func executeCommand(db *gorm.DB, commandExecutionMetadata CommandExecutionMetada
 	var err error
 
 	switch command.CommandType.Name {
-	case command_type.IncrementCountCommandType:
+	case command_type.IncrementCountCommandType: //TODO: add a 10 second cooldown to prevent spamming
 		err = executeIncrementCountCommand(db, command.Counter)
 	case command_type.IncrementCountByUserCommandType:
 		err = executeIncrementCountByUserCommand(db, command.Counter, commandExecutionMetadata.UserName)
