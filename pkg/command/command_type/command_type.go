@@ -8,4 +8,5 @@ const (
 	AddTextCommandType              = "add_text_command"
 	RemoveTextCommandType           = "remove_text_command"
 	UserEnteredTextCommandType      = "user_entered_text"
+	AddQuoteCommandType             = "add_quote"
 )

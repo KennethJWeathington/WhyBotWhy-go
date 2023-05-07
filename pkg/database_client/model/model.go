@@ -52,6 +52,14 @@ type Command struct {
 	IsModeratorOnly bool `gorm:"default false"`
 }
 
+type Quote struct {
+	ID        uint `gorm:"primarykey"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	Name      string `gorm:"not null;unique"`
+	Text      string `gorm:"not null"`
+}
+
 func (command *Command) Equals(otherCommand Command) bool {
 	if command.Name != otherCommand.Name {
 		return false

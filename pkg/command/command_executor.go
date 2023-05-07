@@ -47,6 +47,8 @@ func executeCommand(db *gorm.DB, commandExecutionMetadata CommandExecutionMetada
 		err = executeAddTextCommand(db, commandExecutionMetadata.Arguments)
 	case command_type.RemoveTextCommandType:
 		err = executeRemoveTextCommand(db, commandExecutionMetadata.Arguments)
+	case command_type.AddQuoteCommandType:
+		err = executeAddQuoteCommand(db, commandExecutionMetadata.Arguments)
 	}
 
 	if err != nil {
@@ -161,6 +163,26 @@ func executeRemoveTextCommand(db *gorm.DB, commandArguments []string) error {
 
 	if err := db.Delete(&model.Command{}, command).Error; err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func executeAddQuoteCommand(db *gorm.DB, commandArguments []string) error {
+	if len(commandArguments) < 2 || len(strings.TrimSpace(commandArguments[0])) == 0 {
+		return errors.New("invalid arguments")
+	}
+
+	quoteName := commandArguments[0]
+
+	quoteText := strings.Join(commandArguments[1:], " ")
+
+	newQuote := model.Quote{Name: quoteName,
+		Text: quoteText,
+	}
+
+	if err := db.Create(&newQuote).Error; err != nil {
+		return errors.New("quote already exists")
 	}
 
 	return nil

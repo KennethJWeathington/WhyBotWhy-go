@@ -19,6 +19,7 @@ var baseCommandTypes = []model.CommandType{
 	{Name: command_type.AddTextCommandType},
 	{Name: command_type.RemoveTextCommandType},
 	{Name: command_type.UserEnteredTextCommandType},
+	{Name: command_type.AddQuoteCommandType},
 }
 
 var baseCommands = []model.Command{
@@ -96,6 +97,18 @@ var baseCommands = []model.Command{
 			{Text: `The current commands are: {{.commands}}`},
 		},
 	},
+	{Name: "addquote",
+		CommandType: model.CommandType{Name: command_type.AddQuoteCommandType},
+		CommandTexts: []model.CommandText{
+			{Text: `Quote added`},
+		},
+	},
+	{Name: "quote", //TODO implement specific quotes
+		CommandType: model.CommandType{Name: command_type.TextCommandType},
+		CommandTexts: []model.CommandText{
+			{Text: `{{.randomQuote}}`},
+		},
+	},
 }
 
 func CreateInitialDatabaseData(db *gorm.DB) error {
@@ -115,6 +128,8 @@ func CreateInitialDatabaseData(db *gorm.DB) error {
 	if err := createInitialDatabaseCommandsIfNotExists(db, baseCommands); err != nil {
 		return err
 	}
+
+	db.AutoMigrate(&model.Quote{})
 
 	return nil
 }
