@@ -84,7 +84,7 @@ var baseCommands = []model.Command{
 	{Name: "rules",
 		CommandType: model.CommandType{Name: command_type.TextCommandType},
 		CommandTexts: []model.CommandText{
-			{Text: "Please remember the channel rules:"},
+			{Text: "Please remember the channel rules:"}, //TODO: Come up with rules timer
 			{Text: "1. Be kind"},
 			{Text: "2. No politics or religion"},
 			{Text: "3. No spam "},

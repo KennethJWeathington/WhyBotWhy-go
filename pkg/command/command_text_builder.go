@@ -79,7 +79,7 @@ func getTemplateVariableValue(templateVariable string, db *gorm.DB, commandExecu
 		return strconv.Itoa(getCountFromDatabase(db, command))
 	// case "countByUserName", "countByUser": //TODO: implement
 	case "randomQuote":
-		return getRandomQuote(db)
+		return getRandomQuote(db) //TODO: implement specific quotes
 	default:
 		return ""
 	}
