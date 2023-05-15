@@ -56,7 +56,7 @@ type Quote struct {
 	ID        uint `gorm:"primarykey"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
-	Name      string `gorm:"not null;unique"`
+	Name      string `gorm:"unique"`
 	Text      string `gorm:"not null"`
 }
 

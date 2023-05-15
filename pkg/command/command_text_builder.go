@@ -8,7 +8,7 @@ import (
 	"text/template"
 
 	"github.com/jake-weath/whybotwhy_go/pkg/database_client/model"
-	"github.com/joho/godotenv"
+	"github.com/jake-weath/whybotwhy_go/pkg/env_reader"
 	"gorm.io/gorm"
 )
 
@@ -53,12 +53,12 @@ func buildTemplatedString(templateText string, templateVariableValues map[string
 
 	template, err := template.New("").Parse(templateText)
 	if err != nil {
-		return "" //TODO: add logging
+		return ""
 	}
 
 	err = template.Execute(builder, templateVariableValues)
 	if err != nil {
-		return "" //TODO: add logging
+		return ""
 	}
 
 	return builder.String()
@@ -69,16 +69,11 @@ func getTemplateVariableValue(templateVariable string, db *gorm.DB, commandExecu
 	case "chatUserName":
 		return commandExecutionMetadata.UserName
 	case "streamName":
-		env, err := godotenv.Read()
-		if err != nil {
-			return ""
-		}
-		return env["CHANNEL_NAME"] //TODO: change the const this hits
+		return env_reader.GetChannelName()
 	case "commands":
 		return strings.Join(getAllCommandNames(db), ", ")
 	case "count":
 		return strconv.Itoa(getCountFromDatabase(db, command))
-	// case "countByUserName", "countByUser": //TODO: implement
 	case "randomQuote":
 		return getRandomQuote(db) //TODO: implement specific quotes
 	default:
@@ -116,11 +111,7 @@ func getRandomQuote(db *gorm.DB) string {
 
 	formattedDate := quote.CreatedAt.Format("01/02/06")
 
-	env, err := godotenv.Read()
-	if err != nil {
-		return ""
-	}
-	streamName := env["CHANNEL_NAME"] //TODO: change the const this hits
+	streamName := env_reader.GetChannelName()
 
 	return fmt.Sprintf("\"%s\" - %s, %s", quote.Text, streamName, formattedDate)
 }

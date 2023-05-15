@@ -51,22 +51,6 @@ var baseCommands = []model.Command{
 		},
 		Counter: model.Counter{Name: "boops"},
 	},
-	{Name: "boopboard",
-		CommandType: model.CommandType{Name: command_type.TextCommandType}, //TODO: implement boopboard
-		CommandTexts: []model.CommandText{
-			{Text: "Top Boopers"},
-			{Text: "1. @{{.countByUserName}}: ${{.countByUser}} boops", //TODO: Come up with a way to parameterize this
-				Order: 1,
-			},
-			{Text: "2. @{{.countByUserName}}: ${{.countByUser}} boops",
-				Order: 2,
-			},
-			{Text: "3. @{{.countByUserName}}: ${{.countByUser}} boops",
-				Order: 3,
-			},
-		},
-		Counter: model.Counter{Name: "boops"},
-	},
 	{Name: "addcommand",
 		CommandType: model.CommandType{Name: command_type.AddTextCommandType},
 		CommandTexts: []model.CommandText{

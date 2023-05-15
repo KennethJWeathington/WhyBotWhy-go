@@ -32,8 +32,6 @@ func executeCommand(db *gorm.DB, commandExecutionMetadata CommandExecutionMetada
 		return
 	}
 
-	// if(command.CommandType.Name ) //TODO: possibly check that command type exists
-
 	var err error
 
 	switch command.CommandType.Name {
@@ -59,7 +57,7 @@ func executeCommand(db *gorm.DB, commandExecutionMetadata CommandExecutionMetada
 	sendCommandText(db, command, commandExecutionMetadata, outgoingMessageChannel)
 }
 
-func getCommandFromName(db *gorm.DB, commandName string) model.Command { //TODO: remove this function and replace with a syncmap
+func getCommandFromName(db *gorm.DB, commandName string) model.Command {
 	var command model.Command
 	if err := db.Preload("CommandType").Preload("CommandTexts").Preload("Counter").First(&command, "name = ?", commandName).Error; err != nil {
 		return model.Command{}
@@ -168,7 +166,7 @@ func executeRemoveTextCommand(db *gorm.DB, commandArguments []string) error {
 	return nil
 }
 
-func executeAddQuoteCommand(db *gorm.DB, commandArguments []string) error {
+func executeAddQuoteCommand(db *gorm.DB, commandArguments []string) error { //TODO: Check for quotation marks to check for name
 	if len(commandArguments) < 2 || len(strings.TrimSpace(commandArguments[0])) == 0 {
 		return errors.New("invalid arguments")
 	}
