@@ -1,4 +1,4 @@
-package command_type
+package main
 
 const (
 	TextCommandType                 = "text"

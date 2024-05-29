@@ -1,4 +1,4 @@
-package command
+package main
 
 import (
 	"fmt"
@@ -7,12 +7,10 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/jake-weath/whybotwhy_go/pkg/database_client/model"
-	"github.com/jake-weath/whybotwhy_go/pkg/env_reader"
 	"gorm.io/gorm"
 )
 
-func getCommandTextVariables(commandTexts []model.CommandText) []string {
+func getCommandTextVariables(commandTexts []CommandText) []string {
 	templateVariables := []string{}
 
 	for _, commandText := range commandTexts {
@@ -31,7 +29,7 @@ func parseTemplateVariables(template string) []string {
 	return templateVariables
 }
 
-func getCommandTextVariableValues(db *gorm.DB, templateVariables []string, commandExecutionMetadata CommandExecutionMetadata, command model.Command) map[string]string {
+func getCommandTextVariableValues(db *gorm.DB, templateVariables []string, commandExecutionMetadata CommandExecutionMetadata, command Command) map[string]string {
 	templateVariableValues := map[string]string{}
 	for _, templateVariable := range templateVariables {
 		templateVariableValues[templateVariable] = getTemplateVariableValue(templateVariable, db, commandExecutionMetadata, command)
@@ -39,7 +37,7 @@ func getCommandTextVariableValues(db *gorm.DB, templateVariables []string, comma
 	return templateVariableValues
 }
 
-func getBuiltCommandTexts(commandTexts []model.CommandText, templateVariableValues map[string]string) []string {
+func getBuiltCommandTexts(commandTexts []CommandText, templateVariableValues map[string]string) []string {
 	builtCommandTexts := []string{}
 
 	for _, commandText := range commandTexts {
@@ -64,12 +62,12 @@ func buildTemplatedString(templateText string, templateVariableValues map[string
 	return builder.String()
 }
 
-func getTemplateVariableValue(templateVariable string, db *gorm.DB, commandExecutionMetadata CommandExecutionMetadata, command model.Command) string { //TODO: Refactor this to use less arguments
+func getTemplateVariableValue(templateVariable string, db *gorm.DB, commandExecutionMetadata CommandExecutionMetadata, command Command) string { //TODO: Refactor this to use less arguments
 	switch templateVariable {
 	case "chatUserName":
 		return commandExecutionMetadata.UserName
 	case "streamName":
-		return env_reader.GetChannelName()
+		return GetChannelName()
 	case "commands":
 		return strings.Join(getAllCommandNames(db), ", ")
 	case "count":
@@ -82,7 +80,7 @@ func getTemplateVariableValue(templateVariable string, db *gorm.DB, commandExecu
 }
 
 func getAllCommandNames(db *gorm.DB) []string {
-	var commands []model.Command
+	var commands []Command
 	db.Find(&commands)
 
 	commandNames := []string{}
@@ -92,8 +90,8 @@ func getAllCommandNames(db *gorm.DB) []string {
 	return commandNames
 }
 
-func getCountFromDatabase(db *gorm.DB, command model.Command) int {
-	var counter model.Counter
+func getCountFromDatabase(db *gorm.DB, command Command) int {
+	var counter Counter
 
 	if err := db.First(&counter, "id = ?", command.CounterID).Error; err != nil { //TODO: Add error catching if none found
 		return 0
@@ -103,7 +101,7 @@ func getCountFromDatabase(db *gorm.DB, command model.Command) int {
 }
 
 func getRandomQuote(db *gorm.DB) string {
-	var quote model.Quote
+	var quote Quote
 
 	if err := db.Order("RANDOM()").First(&quote).Error; err != nil {
 		return "No quotes found."
@@ -111,7 +109,7 @@ func getRandomQuote(db *gorm.DB) string {
 
 	formattedDate := quote.CreatedAt.Format("01/02/06")
 
-	streamName := env_reader.GetChannelName()
+	streamName := GetChannelName()
 
 	return fmt.Sprintf("\"%s\" - %s, %s", quote.Text, streamName, formattedDate)
 }

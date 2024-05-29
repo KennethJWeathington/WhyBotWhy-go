@@ -1,4 +1,4 @@
-package chat_client
+package main
 
 import (
 	"github.com/gempir/go-twitch-irc/v4"

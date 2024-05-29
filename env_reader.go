@@ -1,4 +1,4 @@
-package env_reader
+package main
 
 import (
 	"github.com/joho/godotenv"

@@ -1,8 +1,7 @@
-package database_client
+package main
 
 import (
 	"github.com/glebarez/sqlite"
-	"github.com/jake-weath/whybotwhy_go/pkg/database_client/model"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
@@ -19,8 +18,8 @@ func ConnectToDatabase(databaseName string) *gorm.DB {
 	return db
 }
 
-func GetAllCommands(db *gorm.DB) []model.Command {
-	var commands []model.Command
+func GetAllCommands(db *gorm.DB) []Command {
+	var commands []Command
 	db.Preload("CommandType").Preload("CommandTexts").Preload("Counter").Find(&commands)
 	return commands
 }

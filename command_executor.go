@@ -1,11 +1,9 @@
-package command
+package main
 
 import (
 	"errors"
 	"strings"
 
-	"github.com/jake-weath/whybotwhy_go/pkg/command/command_type"
-	"github.com/jake-weath/whybotwhy_go/pkg/database_client/model"
 	"gorm.io/gorm"
 )
 
@@ -24,7 +22,7 @@ func ExecuteCommands(db *gorm.DB, commandExecutionMetadataChannel <-chan Command
 
 func executeCommand(db *gorm.DB, commandExecutionMetadata CommandExecutionMetadata, outgoingMessageChannel chan<- string) {
 	command := getCommandFromName(db, commandExecutionMetadata.CommandName)
-	if command.Equals(model.Command{}) {
+	if command.Equals(Command{}) {
 		return
 	}
 
@@ -34,18 +32,18 @@ func executeCommand(db *gorm.DB, commandExecutionMetadata CommandExecutionMetada
 
 	var err error
 
-	switch command.CommandType.Name {
-	case command_type.IncrementCountCommandType: //TODO: add a 10 second cooldown to prevent spamming
+	switch command.Name {
+	case IncrementCountCommandType: //TODO: add a 10 second cooldown to prevent spamming
 		err = executeIncrementCountCommand(db, command.Counter)
-	case command_type.IncrementCountByUserCommandType:
+	case IncrementCountByUserCommandType:
 		err = executeIncrementCountByUserCommand(db, command.Counter, commandExecutionMetadata.UserName)
-	case command_type.SetCountCommandType:
+	case SetCountCommandType:
 		err = executeSetCountCommand(db, command.Counter, commandExecutionMetadata.Arguments)
-	case command_type.AddTextCommandType:
+	case AddTextCommandType:
 		err = executeAddTextCommand(db, commandExecutionMetadata.Arguments)
-	case command_type.RemoveTextCommandType:
+	case RemoveTextCommandType:
 		err = executeRemoveTextCommand(db, commandExecutionMetadata.Arguments)
-	case command_type.AddQuoteCommandType:
+	case AddQuoteCommandType:
 		err = executeAddQuoteCommand(db, commandExecutionMetadata.Arguments)
 	}
 
@@ -57,15 +55,15 @@ func executeCommand(db *gorm.DB, commandExecutionMetadata CommandExecutionMetada
 	sendCommandText(db, command, commandExecutionMetadata, outgoingMessageChannel)
 }
 
-func getCommandFromName(db *gorm.DB, commandName string) model.Command {
-	var command model.Command
+func getCommandFromName(db *gorm.DB, commandName string) Command {
+	var command Command
 	if err := db.Preload("CommandType").Preload("CommandTexts").Preload("Counter").First(&command, "name = ?", commandName).Error; err != nil {
-		return model.Command{}
+		return Command{}
 	}
 	return command
 }
 
-func sendCommandText(db *gorm.DB, command model.Command, commandExecutionMetadata CommandExecutionMetadata, outgoingMessageChannel chan<- string) {
+func sendCommandText(db *gorm.DB, command Command, commandExecutionMetadata CommandExecutionMetadata, outgoingMessageChannel chan<- string) {
 	templateVariables := getCommandTextVariables(command.CommandTexts)
 
 	templateVariableValues := getCommandTextVariableValues(db, templateVariables, commandExecutionMetadata, command)
@@ -81,7 +79,7 @@ func sendFailureMessage(err error, outgoingMessageChannel chan<- string) {
 	outgoingMessageChannel <- err.Error()
 }
 
-func executeIncrementCountCommand(db *gorm.DB, counter model.Counter) error {
+func executeIncrementCountCommand(db *gorm.DB, counter Counter) error {
 	if err := db.Model(&counter).Update("count", gorm.Expr("count + ?", 1)).Error; err != nil {
 		return err
 	}
@@ -89,10 +87,10 @@ func executeIncrementCountCommand(db *gorm.DB, counter model.Counter) error {
 	return nil
 }
 
-func executeIncrementCountByUserCommand(db *gorm.DB, counter model.Counter, userName string) error {
-	var counterByUser model.CounterByUser
+func executeIncrementCountByUserCommand(db *gorm.DB, counter Counter, userName string) error {
+	var counterByUser CounterByUser
 
-	if err := db.FirstOrCreate(&counterByUser, model.CounterByUser{UserName: userName, CounterID: counter.ID}).Error; err != nil {
+	if err := db.FirstOrCreate(&counterByUser, CounterByUser{UserName: userName, CounterID: counter.ID}).Error; err != nil {
 		return err
 	}
 	if err := db.Model(&counter).Update("count", gorm.Expr("count + ?", 1)).Error; err != nil {
@@ -105,7 +103,7 @@ func executeIncrementCountByUserCommand(db *gorm.DB, counter model.Counter, user
 	return nil
 }
 
-func executeSetCountCommand(db *gorm.DB, counter model.Counter, commandArguments []string) error {
+func executeSetCountCommand(db *gorm.DB, counter Counter, commandArguments []string) error {
 	if len(commandArguments) == 0 {
 		return errors.New("invalid arguments")
 	}
@@ -128,9 +126,9 @@ func executeAddTextCommand(db *gorm.DB, commandArguments []string) error {
 
 	commandText := strings.Join(commandArguments[1:], " ")
 
-	newCommand := model.Command{Name: commandName,
-		CommandType: model.CommandType{Name: command_type.UserEnteredTextCommandType},
-		CommandTexts: []model.CommandText{
+	newCommand := Command{Name: commandName,
+		CommandType: CommandType{Name: UserEnteredTextCommandType},
+		CommandTexts: []CommandText{
 			{Text: commandText},
 		},
 	}
@@ -155,11 +153,11 @@ func executeRemoveTextCommand(db *gorm.DB, commandArguments []string) error {
 		return errors.New("command not found")
 	}
 
-	if err := db.Delete(&model.CommandText{}, "command_id = ?", command.ID).Error; err != nil {
+	if err := db.Delete(&CommandText{}, "command_id = ?", command.ID).Error; err != nil {
 		return err
 	}
 
-	if err := db.Delete(&model.Command{}, command).Error; err != nil {
+	if err := db.Delete(&Command{}, command).Error; err != nil {
 		return err
 	}
 
@@ -175,7 +173,7 @@ func executeAddQuoteCommand(db *gorm.DB, commandArguments []string) error { //TO
 
 	quoteText := strings.Join(commandArguments[1:], " ")
 
-	newQuote := model.Quote{Name: quoteName,
+	newQuote := Quote{Name: quoteName,
 		Text: quoteText,
 	}
 
