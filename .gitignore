@@ -19,3 +19,6 @@
 
 # SQLite dbs
 *.db
+
+#built executable
+whybotwhy_go
