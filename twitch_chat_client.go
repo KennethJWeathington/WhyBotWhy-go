@@ -23,7 +23,7 @@ func (client *TwitchChatClient) StartListening(incomingMessagesChannel chan<- Ch
 
 func (client *TwitchChatClient) parseIncomingMessage(incomingMessagesChannel chan<- ChatCommand) func(message twitch.PrivateMessage) {
 	return func(message twitch.PrivateMessage) {
-		if command, arguments, err := ParseCommand(message.Message, commandSignifier); err != nil {
+		if command, arguments, err := ParseCommand(message.Message, commandSignifier); err == nil {
 			incomingMessagesChannel <- ChatCommand{
 				message.User.DisplayName,
 				isModerator(message.User.Badges),
