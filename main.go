@@ -11,8 +11,8 @@ func main() {
 
 	client := NewTwitchChatClient(userName, oauthToken, channelName)
 
-	chatCommandChannel := make(chan ChatCommand, 100)
-	outgoingMessagesChannel := make(chan string, 100)
+	chatCommandChannel := make(chan ChatCommand)
+	outgoingMessagesChannel := make(chan string)
 
 	go client.StartListening(chatCommandChannel)
 	go client.StartSaying(outgoingMessagesChannel)

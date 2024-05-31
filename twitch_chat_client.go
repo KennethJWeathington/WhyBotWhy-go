@@ -9,16 +9,21 @@ type TwitchChatClient struct {
 	channelName    string
 }
 
-func (client *TwitchChatClient) JoinChannel() {
-	client.chatConnection.Join(client.channelName)
-	if err := client.chatConnection.Connect(); err != nil {
-		panic(err)
+func NewTwitchChatClient(userName string, oauthToken string, channelName string) *TwitchChatClient {
+	twitchClient := twitch.NewClient(userName, oauthToken)
+
+	return &TwitchChatClient{
+		chatConnection: twitchClient,
+		channelName:    channelName,
 	}
 }
 
 func (client *TwitchChatClient) StartListening(incomingMessagesChannel chan<- ChatCommand) {
 	parseIncomingMessageCallback := client.parseIncomingMessage(incomingMessagesChannel)
-	client.chatConnection.OnPrivateMessage(parseIncomingMessageCallback)
+
+	client.chatConnection.OnPrivateMessage(func(message twitch.PrivateMessage) {
+		go parseIncomingMessageCallback(message)
+	})
 }
 
 func (client *TwitchChatClient) parseIncomingMessage(incomingMessagesChannel chan<- ChatCommand) func(message twitch.PrivateMessage) {
@@ -39,12 +44,10 @@ func (client *TwitchChatClient) StartSaying(outgoingMessagesChannel <-chan strin
 	}
 }
 
-func NewTwitchChatClient(userName string, oauthToken string, channelName string) *TwitchChatClient {
-	twitchClient := twitch.NewClient(userName, oauthToken)
-
-	return &TwitchChatClient{
-		chatConnection: twitchClient,
-		channelName:    channelName,
+func (client *TwitchChatClient) JoinChannel() {
+	client.chatConnection.Join(client.channelName)
+	if err := client.chatConnection.Connect(); err != nil {
+		panic(err)
 	}
 }
 
