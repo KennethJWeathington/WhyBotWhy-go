@@ -1,11 +1,6 @@
 package main
 
-import (
-	"errors"
-	"strings"
-
-	"github.com/gempir/go-twitch-irc/v4"
-)
+import "github.com/gempir/go-twitch-irc/v4"
 
 const commandSignifier = "!"
 
@@ -28,7 +23,7 @@ func (client *TwitchChatClient) StartListening(incomingMessagesChannel chan<- Ch
 
 func (client *TwitchChatClient) parseIncomingMessage(incomingMessagesChannel chan<- ChatCommand) func(message twitch.PrivateMessage) {
 	return func(message twitch.PrivateMessage) {
-		if command, arguments, err := ParseCommand(message.Message); err != nil {
+		if command, arguments, err := ParseCommand(message.Message, commandSignifier); err != nil {
 			incomingMessagesChannel <- ChatCommand{
 				message.User.DisplayName,
 				isModerator(message.User.Badges),
@@ -55,17 +50,4 @@ func NewTwitchChatClient(userName string, oauthToken string, channelName string)
 
 func isModerator(badges map[string]int) bool {
 	return badges["broadcaster"] > 0 || badges["moderator"] > 0
-}
-
-func ParseCommand(chatMessage string) (command string, arguments []string, err error) {
-	if len(chatMessage) == 0 || chatMessage[0:1] != commandSignifier {
-		return "", nil, errors.New("not a command")
-	}
-
-	words := strings.Fields(chatMessage)
-
-	command = words[0][1:]
-	arguments = words[1:]
-
-	return command, arguments, nil
 }
