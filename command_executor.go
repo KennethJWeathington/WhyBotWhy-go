@@ -7,20 +7,13 @@ import (
 	"gorm.io/gorm"
 )
 
-type CommandExecutionMetadata struct {
-	UserName    string
-	IsModerator bool
-	CommandName string
-	Arguments   []string
-}
-
-func ExecuteCommands(db *gorm.DB, commandExecutionMetadataChannel <-chan CommandExecutionMetadata, outgoingMessageChannel chan<- string) { //TODO: Replace all instances of db with a database client interface
+func ExecuteCommands(db *gorm.DB, commandExecutionMetadataChannel <-chan ChatCommand, outgoingMessageChannel chan<- string) { //TODO: Replace all instances of db with a database client interface
 	for commandExecutionMetadata := range commandExecutionMetadataChannel {
 		go executeCommand(db, commandExecutionMetadata, outgoingMessageChannel)
 	}
 }
 
-func executeCommand(db *gorm.DB, commandExecutionMetadata CommandExecutionMetadata, outgoingMessageChannel chan<- string) {
+func executeCommand(db *gorm.DB, commandExecutionMetadata ChatCommand, outgoingMessageChannel chan<- string) {
 	command := getCommandFromName(db, commandExecutionMetadata.CommandName)
 	if command.Equals(Command{}) {
 		return
@@ -63,7 +56,7 @@ func getCommandFromName(db *gorm.DB, commandName string) Command {
 	return command
 }
 
-func sendCommandText(db *gorm.DB, command Command, commandExecutionMetadata CommandExecutionMetadata, outgoingMessageChannel chan<- string) {
+func sendCommandText(db *gorm.DB, command Command, commandExecutionMetadata ChatCommand, outgoingMessageChannel chan<- string) {
 	templateVariables := getCommandTextVariables(command.CommandTexts)
 
 	templateVariableValues := getCommandTextVariableValues(db, templateVariables, commandExecutionMetadata, command)

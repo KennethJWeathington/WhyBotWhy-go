@@ -17,13 +17,13 @@ func main() {
 
 	client := NewChatClient(channelName, twitchClient)
 
-	incomingMessagesChannel := make(chan struct {
-		UserName    string
-		Message     string
-		IsModerator bool
-	}, 100)
-	commandExecutionMetadataChannel := make(chan CommandExecutionMetadata, 100)
-	outgoingMessagesChannel := make(chan string, 100)
+	// incomingMessagesChannel := make(chan struct {
+	// 	UserName    string
+	// 	Message     string
+	// 	IsModerator bool
+	// }, 100)
+	// commandExecutionMetadataChannel := make(chan ChatCommand, 100)
+	// outgoingMessagesChannel := make(chan string, 100)
 
 	go client.StartListening(incomingMessagesChannel)
 	go client.StartSaying(outgoingMessagesChannel)

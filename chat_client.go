@@ -63,6 +63,6 @@ func NewChatClient(channel string, chatConnection ChatConnection) *ChatClient {
 	}
 }
 
-func isModerator(badges map[string]int) bool {
-	return badges["broadcaster"] > 0 || badges["moderator"] > 0
-}
+// func isModerator(badges map[string]int) bool {
+// 	return badges["broadcaster"] > 0 || badges["moderator"] > 0
+// }
