@@ -7,19 +7,19 @@ import (
 	"gorm.io/gorm"
 )
 
-func ExecuteCommands(db *gorm.DB, commandExecutionMetadataChannel <-chan ChatCommand, outgoingMessageChannel chan<- string) { //TODO: Replace all instances of db with a database client interface
-	for commandExecutionMetadata := range commandExecutionMetadataChannel {
-		go executeCommand(db, commandExecutionMetadata, outgoingMessageChannel)
+func ExecuteCommands(db *gorm.DB, chatCommandChannel <-chan ChatCommand, outgoingMessageChannel chan<- string) { //TODO: Replace all instances of db with a database client interface
+	for chatCommand := range chatCommandChannel {
+		go executeCommand(db, chatCommand, outgoingMessageChannel)
 	}
 }
 
-func executeCommand(db *gorm.DB, commandExecutionMetadata ChatCommand, outgoingMessageChannel chan<- string) {
-	command := getCommandFromName(db, commandExecutionMetadata.CommandName)
+func executeCommand(db *gorm.DB, chatCommand ChatCommand, outgoingMessageChannel chan<- string) {
+	command := getCommandFromName(db, chatCommand.CommandName)
 	if command.Equals(Command{}) {
 		return
 	}
 
-	if command.IsModeratorOnly && !commandExecutionMetadata.IsModerator {
+	if command.IsModeratorOnly && !chatCommand.IsModerator {
 		return
 	}
 
@@ -29,15 +29,15 @@ func executeCommand(db *gorm.DB, commandExecutionMetadata ChatCommand, outgoingM
 	case IncrementCountCommandType: //TODO: add a 10 second cooldown to prevent spamming
 		err = executeIncrementCountCommand(db, command.Counter)
 	case IncrementCountByUserCommandType:
-		err = executeIncrementCountByUserCommand(db, command.Counter, commandExecutionMetadata.UserName)
+		err = executeIncrementCountByUserCommand(db, command.Counter, chatCommand.UserName)
 	case SetCountCommandType:
-		err = executeSetCountCommand(db, command.Counter, commandExecutionMetadata.Arguments)
+		err = executeSetCountCommand(db, command.Counter, chatCommand.Arguments)
 	case AddTextCommandType:
-		err = executeAddTextCommand(db, commandExecutionMetadata.Arguments)
+		err = executeAddTextCommand(db, chatCommand.Arguments)
 	case RemoveTextCommandType:
-		err = executeRemoveTextCommand(db, commandExecutionMetadata.Arguments)
+		err = executeRemoveTextCommand(db, chatCommand.Arguments)
 	case AddQuoteCommandType:
-		err = executeAddQuoteCommand(db, commandExecutionMetadata.Arguments)
+		err = executeAddQuoteCommand(db, chatCommand.Arguments)
 	}
 
 	if err != nil {
@@ -45,7 +45,7 @@ func executeCommand(db *gorm.DB, commandExecutionMetadata ChatCommand, outgoingM
 		return
 	}
 
-	sendCommandText(db, command, commandExecutionMetadata, outgoingMessageChannel)
+	sendCommandText(db, command, chatCommand, outgoingMessageChannel)
 }
 
 func getCommandFromName(db *gorm.DB, commandName string) Command {
@@ -56,10 +56,10 @@ func getCommandFromName(db *gorm.DB, commandName string) Command {
 	return command
 }
 
-func sendCommandText(db *gorm.DB, command Command, commandExecutionMetadata ChatCommand, outgoingMessageChannel chan<- string) {
+func sendCommandText(db *gorm.DB, command Command, chatCommand ChatCommand, outgoingMessageChannel chan<- string) {
 	templateVariables := getCommandTextVariables(command.CommandTexts)
 
-	templateVariableValues := getCommandTextVariableValues(db, templateVariables, commandExecutionMetadata, command)
+	templateVariableValues := getCommandTextVariableValues(db, templateVariables, chatCommand, command)
 
 	builtCommandTexts := getBuiltCommandTexts(command.CommandTexts, templateVariableValues)
 

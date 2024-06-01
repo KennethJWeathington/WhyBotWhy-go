@@ -29,10 +29,10 @@ func parseTemplateVariables(template string) []string {
 	return templateVariables
 }
 
-func getCommandTextVariableValues(db *gorm.DB, templateVariables []string, commandExecutionMetadata ChatCommand, command Command) map[string]string {
+func getCommandTextVariableValues(db *gorm.DB, templateVariables []string, chatCommand ChatCommand, command Command) map[string]string {
 	templateVariableValues := map[string]string{}
 	for _, templateVariable := range templateVariables {
-		templateVariableValues[templateVariable] = getTemplateVariableValue(templateVariable, db, commandExecutionMetadata, command)
+		templateVariableValues[templateVariable] = getTemplateVariableValue(templateVariable, db, chatCommand, command)
 	}
 	return templateVariableValues
 }
@@ -62,10 +62,10 @@ func buildTemplatedString(templateText string, templateVariableValues map[string
 	return builder.String()
 }
 
-func getTemplateVariableValue(templateVariable string, db *gorm.DB, commandExecutionMetadata ChatCommand, command Command) string { //TODO: Refactor this to use less arguments
+func getTemplateVariableValue(templateVariable string, db *gorm.DB, chatCommand ChatCommand, command Command) string { //TODO: Refactor this to use less arguments
 	switch templateVariable {
 	case "chatUserName":
-		return commandExecutionMetadata.UserName
+		return chatCommand.UserName
 	case "streamName":
 		return GetChannelName()
 	case "commands":
