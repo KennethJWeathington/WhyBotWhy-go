@@ -6,7 +6,9 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-func ConnectToDatabase(databaseName string) *gorm.DB {
+var databaseConnection *gorm.DB
+
+func InitDatabase(databaseName string) {
 	db, err := gorm.Open(sqlite.Open(databaseName), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Silent),
 	})
@@ -15,7 +17,11 @@ func ConnectToDatabase(databaseName string) *gorm.DB {
 		panic("failed to connect database")
 	}
 
-	return db
+	databaseConnection = db
+}
+
+func GetConnection() *gorm.DB {
+	return databaseConnection
 }
 
 func GetAllCommands(db *gorm.DB) []Command {

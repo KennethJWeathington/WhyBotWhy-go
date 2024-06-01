@@ -6,7 +6,8 @@ func main() {
 	userName := GetBotUsername()
 	oauthToken := GetOAuthToken()
 
-	db := ConnectToDatabase(databaseName)
+	InitDatabase(databaseName)
+	db := GetConnection()
 	CreateInitialDatabaseData(db)
 
 	client := NewTwitchChatClient(userName, oauthToken, channelName)
